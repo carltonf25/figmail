@@ -1,0 +1,10 @@
+{
+  "name": "Figma → Mailchimp",
+  "id": "figma-mailchimp-plugin",
+  "api": "1.0.0",
+  "editorType": ["figma"],
+  "main": "code.js",
+  "ui": "assets/ui.html",
+  "permissions": ["currentuser"],
+  "enableProposedApi": false
+}
