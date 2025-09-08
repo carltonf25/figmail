@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "rm -rf dist && BUILD_TARGET=code vite build && vite build --mode ui",
+    "build:code": "BUILD_TARGET=code vite build",
+    "build:ui": "vite build",
     "lint": "echo 'ok'"
   },
   "dependencies": {

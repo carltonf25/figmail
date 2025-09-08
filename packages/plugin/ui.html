@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Figma → Mailchimp</title>
+    <style>
+        body {
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 12px;
+            margin: 0;
+            padding: 16px;
+            background: white;
+        }
+        
+        h3 {
+            margin: 0 0 16px 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        
+        input[type="text"], input[type="email"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+        
+        input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        .progress {
+            color: #666;
+            font-style: italic;
+            margin-top: 12px;
+        }
+        
+        .checkbox-container {
+            margin: 12px 0;
+        }
+        
+        small {
+            color: #666;
+            display: block;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h3>Figma → Mailchimp</h3>
+    
+    <button id="connectBtn">Connect Mailchimp</button>
+    
+    <div>
+        <label for="templateName">Template name</label>
+        <input type="text" id="templateName" value="Figma Template">
+    </div>
+    
+    <div>
+        <label for="subject">Subject</label>
+        <input type="text" id="subject" value="Draft from Figma">
+    </div>
+    
+    <div>
+        <label for="preheader">Preheader</label>
+        <input type="text" id="preheader" placeholder="Optional preview text">
+    </div>
+    
+    <div class="checkbox-container">
+        <label>
+            <input type="checkbox" id="createCampaign"> Create draft campaign
+        </label>
+    </div>
+    
+    <div id="campaignOptions" style="display: none;">
+        <label for="listId">Audience List ID</label>
+        <input type="text" id="listId" placeholder="e.g. a1b2c3d4...">
+        <small>Requires Mailchimp List ID</small>
+    </div>
+    
+    <button id="pushBtn">Compile & Push</button>
+    
+    <div id="progress" class="progress" style="display: none;"></div>
+
+    <script>
+        // Get elements
+        const connectBtn = document.getElementById('connectBtn');
+        const pushBtn = document.getElementById('pushBtn');
+        const createCampaignCheckbox = document.getElementById('createCampaign');
+        const campaignOptions = document.getElementById('campaignOptions');
+        const progressDiv = document.getElementById('progress');
+        
+        // Show/hide campaign options
+        createCampaignCheckbox.addEventListener('change', function() {
+            campaignOptions.style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // Connect button
+        connectBtn.addEventListener('click', function() {
+            parent.postMessage({ pluginMessage: { type: "CONNECT" } }, "*");
+        });
+        
+        // Push button
+        pushBtn.addEventListener('click', function() {
+            const templateName = document.getElementById('templateName').value;
+            const subject = document.getElementById('subject').value;
+            const preheader = document.getElementById('preheader').value;
+            const createCampaign = document.getElementById('createCampaign').checked;
+            const listId = document.getElementById('listId').value;
+            
+            parent.postMessage({ 
+                pluginMessage: { 
+                    type: "PUSH", 
+                    templateName,
+                    subject, 
+                    preheader, 
+                    createCampaign, 
+                    listId 
+                } 
+            }, "*");
+        });
+        
+        // Listen for messages from plugin
+        window.onmessage = function(event) {
+            const msg = event.data.pluginMessage;
+            if (!msg) return;
+            
+            if (msg.type === "PROGRESS") {
+                progressDiv.textContent = "⏳ " + msg.step;
+                progressDiv.style.display = 'block';
+            }
+            
+            if (msg.type === "DONE") {
+                progressDiv.style.display = 'none';
+                alert('Successfully pushed to Mailchimp!');
+            }
+            
+            if (msg.type === "ERROR") {
+                progressDiv.style.display = 'none';
+                alert('Error: ' + msg.message);
+            }
+        };
+    </script>
+</body>
+</html>
+

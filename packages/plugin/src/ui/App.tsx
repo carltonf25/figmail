@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 
 type Progress = { step: string } | null;
+type SelectionStatus = { hasValidFrame: boolean; message: string } | null;
 
 export default function App() {
   const [progress, setProgress] = useState<Progress>(null);
+  const [selectionStatus, setSelectionStatus] = useState<SelectionStatus>(null);
   const [subject, setSubject] = useState("Draft from Figma");
   const [preheader, setPreheader] = useState("");
   const [templateName, setTemplateName] = useState("Figma Template");
@@ -17,6 +19,7 @@ export default function App() {
       if (msg.type === "PROGRESS") setProgress({ step: msg.step });
       if (msg.type === "DONE") setProgress(null);
       if (msg.type === "ERROR") alert(msg.message);
+      if (msg.type === "SELECTION_UPDATE") setSelectionStatus({ hasValidFrame: msg.hasValidFrame, message: msg.message });
     };
   }, []);
 
@@ -30,6 +33,23 @@ export default function App() {
   return (
     <div style={{ fontFamily: "Inter, system-ui, sans-serif", padding: 12, width: 360 }}>
       <h3>Figma → Mailchimp</h3>
+      <div style={{ background: "#f0f8ff", padding: 8, borderRadius: 4, marginBottom: 12, fontSize: 12 }}>
+        💡 <strong>Tip:</strong> Select an email design Frame in Figma before clicking "Compile & Push"
+      </div>
+      
+      {selectionStatus && (
+        <div style={{ 
+          background: selectionStatus.hasValidFrame ? "#e8f5e8" : "#fff3e0", 
+          padding: 8, 
+          borderRadius: 4, 
+          marginBottom: 12, 
+          fontSize: 12,
+          border: `1px solid ${selectionStatus.hasValidFrame ? "#c8e6c9" : "#ffcc80"}`
+        }}>
+          {selectionStatus.hasValidFrame ? "✅" : "⚠️"} <strong>Selection:</strong> {selectionStatus.message}
+        </div>
+      )}
+      
       <button onClick={connect}>Connect Mailchimp</button>
       <div style={{ marginTop: 12 }}>
         <label>Template name</label>
@@ -53,7 +73,17 @@ export default function App() {
           <small>Requires Mailchimp List ID</small>
         </div>
       )}
-      <button style={{ marginTop: 12 }} onClick={push}>Compile & Push</button>
+      <button 
+        style={{ 
+          marginTop: 12, 
+          opacity: selectionStatus?.hasValidFrame ? 1 : 0.6,
+          cursor: selectionStatus?.hasValidFrame ? "pointer" : "not-allowed"
+        }} 
+        onClick={selectionStatus?.hasValidFrame ? push : undefined}
+        disabled={!selectionStatus?.hasValidFrame}
+      >
+        Compile & Push
+      </button>
       {progress && <p style={{ marginTop: 8 }}>⏳ {progress.step}</p>}
     </div>
   );

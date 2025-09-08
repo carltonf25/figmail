@@ -18,11 +18,34 @@ function parseDataUri(dataUri: string) {
  * Upload images to S3 and rewrite each ImageBlock to include `src` URL.
  */
 export async function uploadAssetsAndRewrite(ast: EmailAst, images: Record<string,string>) {
-  const bucket = process.env.S3_BUCKET!;
+  const bucket = process.env.S3_BUCKET;
   const prefix = (process.env.S3_PREFIX || "emails").replace(/\/$/, "");
   const region = process.env.AWS_REGION || "us-east-1";
 
+  console.log("=== ASSET UPLOAD ===");
+  console.log("S3_BUCKET:", bucket);
+  console.log("AWS_REGION:", region);
+  console.log("Images to process:", Object.keys(images));
+
   const clone: EmailAst = JSON.parse(JSON.stringify(ast));
+  
+  // If S3 is not configured, skip upload and use data URIs directly
+  if (!bucket) {
+    console.log("S3 not configured, using data URIs directly");
+    for (const s of clone.sections) {
+      for (const c of s.columns) {
+        for (const b of c.blocks) {
+          if (b.type === "image") {
+            const bin = images[b.key];
+            if (bin) {
+              (b as any).src = bin; // Use data URI directly
+            }
+          }
+        }
+      }
+    }
+    return clone;
+  }
   const uploads: Promise<any>[] = [];
 
   for (const s of clone.sections) {

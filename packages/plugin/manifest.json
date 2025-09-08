@@ -3,8 +3,8 @@
   "id": "figma-mailchimp-plugin",
   "api": "1.0.0",
   "editorType": ["figma"],
-  "main": "code.js",
-  "ui": "assets/ui.html",
+  "main": "dist/code.iife.js",
+  "ui": "ui.html",
   "permissions": ["currentuser"],
   "enableProposedApi": false
 }

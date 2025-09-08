@@ -6,6 +6,7 @@ import { astToMjml } from "../services/astToMjml.js";
 import { replaceMergeTags } from "../services/mergeTags.js";
 import { uploadAssetsAndRewrite } from "../services/assets.js";
 import { createOrUpdateTemplate, createDraftCampaign, setCampaignContent } from "../services/mailchimp.js";
+import { debugRequest } from "../utils/debug.js";
 
 const router = Router();
 
@@ -27,6 +28,8 @@ router.post("/compile", async (req, res) => {
 /** MVP: compile + push to Mailchimp */
 router.post("/compile-and-push", async (req, res) => {
   try {
+    debugRequest(req);
+    
     const ast: EmailAstType = parseEmailAst(req.body.ast);
     const images: Record<string, string> = req.body.images ?? {};
     const options = req.body.options ?? {};
