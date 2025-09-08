@@ -29,10 +29,26 @@ router.post("/compile", async (req, res) => {
 router.post("/compile-and-push", async (req, res) => {
   try {
     debugRequest(req);
-    
+
+    // Check authentication
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({
+        error: "Not authenticated",
+        message: "Please connect to Mailchimp first"
+      });
+    }
+
+    const user = req.user as any;
+    if (!user.accessToken || !user.dc) {
+      return res.status(401).json({
+        error: "Invalid authentication",
+        message: "Mailchimp access token or datacenter missing"
+      });
+    }
+
     const ast: EmailAstType = parseEmailAst(req.body.ast);
     const images: Record<string, string> = req.body.images ?? {};
-    const options = req.body.options ?? {};
+    const options = req.body;
     const templateName: string = options.templateName || ast.name || "Figma Template";
     const createCampaign: boolean = !!options.createCampaign;
     const listId: string | undefined = options.listId;
@@ -45,43 +61,60 @@ router.post("/compile-and-push", async (req, res) => {
     const { html } = mjml2html(replaceMergeTags(mjml), { validationLevel: "soft" });
     const inlined = juice(html);
 
-    const tpl = await createOrUpdateTemplate(templateName, inlined);
+    // Use OAuth tokens from session
+    const tpl = await createOrUpdateTemplate(templateName, inlined, {
+      accessToken: user.accessToken,
+      dc: user.dc
+    });
 
     let campaign = null;
     if (createCampaign) {
       if (!listId) throw new Error("listId is required to create a campaign");
-      
+
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(replyTo)) {
         throw new Error(`Invalid reply_to email format: ${replyTo}`);
       }
-      
+
       // Warn about placeholder domains
       if (replyTo.includes('example.com') || replyTo.includes('yourdomain.com')) {
         throw new Error(`Please configure a valid reply_to email. Current: ${replyTo}. Set DEFAULT_REPLY_TO in .env or pass replyTo in options.`);
       }
-      
-      campaign = await createDraftCampaign({ 
-        listId, 
-        subject, 
-        fromName, 
-        replyTo, 
+
+      campaign = await createDraftCampaign({
+        listId,
+        subject,
+        fromName,
+        replyTo,
         fromEmail: options.fromEmail || replyTo,
-        templateId: tpl.id 
+        templateId: tpl.id
+      }, {
+        accessToken: user.accessToken,
+        dc: user.dc
       });
+
       // Ensure content is set (template may already contain HTML but we set for certainty)
-      await setCampaignContent(campaign.id, inlined);
+      await setCampaignContent(campaign.id, inlined, {
+        accessToken: user.accessToken,
+        dc: user.dc
+      });
     }
 
     res.json({
       templateId: tpl.id,
-      campaignId: campaign?.id || null,
-      mjml,
-      html: inlined
+      templateUrl: `https://${user.dc}.admin.mailchimp.com/templates/edit?id=${tpl.id}`,
+      campaignId: campaign?.id,
+      campaignUrl: campaign ? `https://${user.dc}.admin.mailchimp.com/campaigns/edit?id=${campaign.id}` : null,
+      success: true
     });
+
   } catch (e: any) {
-    res.status(400).json({ message: e.message });
+    console.error("Compile and push error:", e);
+    res.status(400).json({
+      error: e.message,
+      success: false
+    });
   }
 });
 

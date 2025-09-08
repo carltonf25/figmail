@@ -135,12 +135,24 @@ pnpm --filter @figmc/shared build
 
 ## Environment Variables
 
-Backend requires `.env`:
+Backend requires `.env`. For production use, set up OAuth2 as described in [OAUTH_SETUP.md](./OAUTH_SETUP.md).
 
+### Development (Static Token - Not Recommended for Production)
 ```bash
-# Mailchimp (for dev, can bypass OAuth with static token + dc)
+# Mailchimp static token (for development only - use OAuth2 in production)
 MC_ACCESS_TOKEN=your_mailchimp_access_token
 MC_DC=usXX
+```
+
+### Production (OAuth2 - Recommended)
+```bash
+# Mailchimp OAuth2 Configuration (get from developer.mailchimp.com)
+MC_CLIENT_ID=your_mailchimp_client_id
+MC_CLIENT_SECRET=your_mailchimp_client_secret
+MC_REDIRECT_URI=http://localhost:4000/auth/mailchimp/callback
+
+# Session Configuration (required for OAuth)
+SESSION_SECRET=your-super-secret-session-key-change-in-production
 
 # S3 for asset hosting (optional - falls back to data URIs if not configured)
 S3_BUCKET=your-bucket
@@ -154,6 +166,8 @@ DEFAULT_REPLY_TO=hello@yourdomain.com
 DEBUG=true
 DEBUG_LEVEL=info
 ```
+
+**🔐 Security Note**: Use OAuth2 in production. Static tokens are only for development and testing.
 
 ---
 
