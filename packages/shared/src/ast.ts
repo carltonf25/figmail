@@ -38,13 +38,16 @@ const Background = z.object({
 // Alignment options
 const Alignment = z.enum(["left", "center", "right"]);
 
-// Block types
+// Enhanced Block types with Mailchimp Template Language support
 const TextBlock = z.object({
   type: z.literal("text"),
+  id: z.string().optional(), // Unique identifier for mc:edit regions
   html: z.string(), // HTML content (supports merge tags)
   typography: Typography,
   align: Alignment.default("left"),
   spacing: Spacing,
+  editable: z.boolean().default(true), // Whether this text should be editable in Mailchimp
+  editRegionName: z.string().optional(), // Descriptive name for the editable region
 });
 
 const ContainerBlock = z.object({
@@ -69,6 +72,7 @@ const ImageBlock = z.object({
 
 const ButtonBlock = z.object({
   type: z.literal("button"),
+  id: z.string().optional(), // Unique identifier for mc:edit regions
   text: z.string(),
   href: z.string().url(),
   backgroundColor: Color.default("#007bff"),
@@ -77,6 +81,8 @@ const ButtonBlock = z.object({
   align: Alignment.default("center"),
   spacing: Spacing,
   border: Border,
+  editable: z.boolean().default(true), // Whether button text should be editable
+  editRegionName: z.string().optional(), // Descriptive name for the editable region
 });
 
 const DividerBlock = z.object({
@@ -170,7 +176,17 @@ export function isButtonBlock(block: Block): block is ButtonBlock {
   return block.type === "button";
 }
 
-// Helper functions for common AST operations - optimized for Zod v4
+// Utility function to generate safe mc:edit identifiers
+export function generateEditId(block: { id?: string; editRegionName?: string }, fallback: string): string {
+  if (block.id) return `edit_${block.id}`;
+  if (block.editRegionName) {
+    // Convert to safe identifier: "Header Title" -> "header_title"
+    return block.editRegionName.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_');
+  }
+  return `${fallback}_${Math.random().toString(36).substr(2, 6)}`;
+}
+
+// Helper functions for common AST operations - enhanced for mc:edit
 export function createTextBlock(
   html: string,
   options: Partial<Omit<TextBlock, "type" | "html">> = {}
@@ -179,6 +195,7 @@ export function createTextBlock(
     type: "text" as const,
     html,
     align: "left" as const,
+    editable: true,
     ...options,
   });
 }
@@ -207,6 +224,7 @@ export function createButtonBlock(
     backgroundColor: "#007bff" as const,
     color: "#ffffff" as const,
     align: "center" as const,
+    editable: true,
     ...options,
   });
 }

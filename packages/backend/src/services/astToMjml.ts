@@ -1,4 +1,4 @@
-import { EmailAst, Block, isTextBlock, isContainerBlock, isImageBlock, isButtonBlock } from "@figmc/shared";
+import { EmailAst, Block, isTextBlock, isContainerBlock, isImageBlock, isButtonBlock, generateEditId } from "@figmc/shared";
 
 function paddingAttrs(sp?: { paddingTop?: number; paddingRight?: number; paddingBottom?: number; paddingLeft?: number; }) {
   if (!sp) return "";
@@ -23,18 +23,22 @@ function textStyle(typo: any) {
   return attrs.join(" ");
 }
 
-// Enhanced block rendering with better type safety
+// Enhanced block rendering with mc:edit support
 function renderBlock(b: Block): string {
-  // Use type guards for better type safety and IntelliSense
   if (isTextBlock(b)) {
-    return `<mj-text ${textStyle(b.typography)} align="${b.align}"${paddingAttrs(b.spacing)}>${b.html}</mj-text>`;
+    const editId = b.editable && (b.id || b.editRegionName) ? generateEditId(b, 'text') : null;
+    const content = `<mj-text ${textStyle(b.typography)} align="${b.align}"${paddingAttrs(b.spacing)}>${b.html}</mj-text>`;
+    
+    if (editId) {
+      return `<div mc:edit="${editId}">${content}</div>`;
+    }
+    return content;
   }
   
   if (isContainerBlock(b)) {
     const bgColor = b.backgroundColor ? ` background-color="${b.backgroundColor}"` : "";
     const height = b.height ? ` height="${b.height}px"` : "";
     const padding = paddingAttrs(b.spacing);
-    // Create a wrapper with background color
     return `<mj-wrapper${bgColor}${padding}><mj-section><mj-column><mj-spacer${height} /></mj-column></mj-section></mj-wrapper>`;
   }
   
@@ -48,11 +52,17 @@ function renderBlock(b: Block): string {
   }
   
   if (isButtonBlock(b)) {
+    const editId = b.editable && (b.id || b.editRegionName) ? generateEditId(b, 'button') : null;
     const radius = b.border?.radius ? ` border-radius="${b.border.radius}px"` : "";
     const border = b.border?.width
       ? ` border="${b.border.width}px solid ${b.border.color ?? b.backgroundColor}"`
       : "";
-    return `<mj-button href="${b.href}" align="${b.align}" background-color="${b.backgroundColor}" color="${b.color}" ${textStyle(b.typography)}${radius}${border}${paddingAttrs(b.spacing)}>${b.text}</mj-button>`;
+    const content = `<mj-button href="${b.href}" align="${b.align}" background-color="${b.backgroundColor}" color="${b.color}" ${textStyle(b.typography)}${radius}${border}${paddingAttrs(b.spacing)}>${b.text}</mj-button>`;
+    
+    if (editId) {
+      return `<div mc:edit="${editId}">${content}</div>`;
+    }
+    return content;
   }
   
   // Handle remaining block types with the discriminated union

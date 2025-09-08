@@ -28,23 +28,48 @@ This document outlines the design conventions and best practices for creating em
   1. Select text in Figma
   2. Right-click → "Add link" (or Cmd+K)
   3. Enter the URL
-- **Result**: Text will become clickable `<a>` tags in email
-- **Styling**: Links inherit text color and get underline styling
+- **Result**: Clickable links in the email
+- **Best practice**: Use descriptive link text
 
 ### **Button Links**
-- **Naming convention**: Include `Email/Button` in the frame name
-- **Structure**: Frame containing text layer
-- **Link storage**: Set `href` in plugin data (or we'll add UI for this)
-- **Styling**: Uses frame background color and corner radius
+- **How to create**: 
+  1. Create a frame named `Email/Button/[Button Name]`
+  2. Add text inside the frame
+  3. Add link to the text (Cmd+K)
+- **Result**: Clickable button with link
+- **Best practice**: Use clear, action-oriented button text
 
 ---
 
-## 🖼️ **Images & Graphics**
+## 🎨 **Element Types**
 
-### **Standard Images**
-- **Types**: Rectangle or Frame
-- **Naming**: Include `Email/Image` to force image treatment
-- **Export**: Automatically exported as PNG at 2x resolution
+### **Text Elements**
+- **Type**: Text layers
+- **Styling**: Font family, size, weight, color, line height
+- **Alignment**: Left, center, right
+- **Result**: HTML text with preserved styling
+
+### **Images**
+- **Type**: Rectangles or frames named `Email/Image/[Name]`
+- **Format**: PNG export at 2x scale
+- **Result**: Optimized images in email
+- **Best practice**: Use high-quality source images
+
+### **Buttons**
+- **Type**: Frames named `Email/Button/[Name]`
+- **Content**: Text layer inside the frame
+- **Styling**: Background color, text color, corner radius
+- **Result**: Styled button with link functionality
+
+### **Dividers**
+- **Type**: Lines or frames named `Email/Divider`
+- **Styling**: Color, thickness
+- **Result**: Horizontal divider line
+
+### **Spacers**
+- **Type**: Frames named `Email/Spacer`
+- **Purpose**: Add vertical spacing
+- **Result**: Empty space in email
 
 ### **Colored Background Containers (NEW)**
 - **How to create**:
@@ -55,88 +80,119 @@ This document outlines the design conventions and best practices for creating em
 
 ---
 
-## 📝 **Text Elements**
+## 🎛️ **Mailchimp Editable Regions (NEW)**
 
-### **Regular Text**
-- **Type**: Text layers
-- **Styling**: Font family, size, color, alignment are preserved
-- **Line breaks**: Use Shift+Enter for `<br>` tags
-- **Hyperlinks**: Use Figma's native link feature
+The plugin automatically creates editable regions in Mailchimp templates, allowing content editors to modify text and button labels without redesigning in Figma.
 
-### **Rich Text**
-- **Support**: Basic formatting (bold, italic, color changes)
-- **Links**: Per-text-segment linking supported
+### **Text Editing**
+- **Default Behavior**: All text blocks are automatically editable in Mailchimp
+- **Custom Region Names**: 
+  - Layer name: `Email/Headline` → Becomes `mc:edit="headline"`
+  - Layer name: `Email/Body Content` → Becomes `mc:edit="body_content"`
+  - Layer name: `Email/Footer Text` → Becomes `mc:edit="footer_text"`
+- **Disable Editing**: Add `/NoEdit` to layer name
+  - Example: `Email/Company Logo/NoEdit` → Not editable in Mailchimp
 
----
+### **Button Editing**
+- **Default Behavior**: Button text is editable in Mailchimp
+- **Custom Region Names**: 
+  - Frame name: `Email/Button/Shop Now` → Button text becomes `mc:edit="shop_now"`
+  - Frame name: `Email/Button/Learn More` → Button text becomes `mc:edit="learn_more"`
+  - Frame name: `Email/Button/Get Started` → Button text becomes `mc:edit="get_started"`
+- **Disable Editing**: Add `/NoEdit` to button frame name
+  - Example: `Email/Button/Fixed CTA/NoEdit` → Button text not editable
 
-## 🎨 **Special Elements**
+### **Best Practices for Editable Regions**
 
-### **Buttons**
-- **Naming**: `Email/Button` (case insensitive)
-- **Structure**: Frame with text layer inside
-- **Styling**: Background color, corner radius, padding
-- **Link**: Store URL in plugin data or use naming convention
+#### **Naming Conventions**
+- Use descriptive, unique names for each editable region
+- Avoid special characters (use spaces, letters, numbers only)
+- Be consistent with naming across your email designs
+- Examples of good names:
+  - `Email/Main Headline`
+  - `Email/Product Description`
+  - `Email/Call to Action`
+  - `Email/Footer Disclaimer`
 
-### **Dividers**
-- **Naming**: `Email/Divider` (case insensitive)
-- **Result**: Horizontal line (`<hr>` equivalent)
-- **Color**: Uses default gray (#E0E0E0)
+#### **Content Organization**
+- Group related content with consistent naming patterns
+- Use meaningful descriptions that content editors will understand
+- Keep region names short but descriptive
+- Avoid generic names like "Text 1", "Text 2"
 
-### **Spacers**
-- **Naming**: `Email/Spacer` (case insensitive)
-- **Height**: Uses element height for spacing
-- **Purpose**: Vertical spacing between elements
+#### **Testing Workflow**
+1. Design your email in Figma with properly named layers
+2. Use "Compile & Push" to create the Mailchimp template
+3. In Mailchimp, create a new campaign using your template
+4. Verify that all expected regions are editable
+5. Test editing content to ensure it works as expected
 
----
+### **Technical Details**
 
-## 📐 **Layout Best Practices**
+#### **How It Works**
+- Text blocks with Figma layer names automatically become `mc:edit` regions
+- Layer names are converted to safe identifiers (spaces become underscores)
+- Each editable region gets a unique identifier in the HTML template
+- Content editors can modify text directly in Mailchimp's campaign editor
 
-### ✅ **DO:**
-- Use frames for containers and sections
-- Place text **inside** rectangles for overlay effects
-- Use horizontal layout for multi-column designs
-- Name elements descriptively
-- Test with realistic content lengths
-- Use consistent spacing and alignment
+#### **Generated HTML Structure**
+```html
+<!-- Text with editable region -->
+<div mc:edit="headline">
+  <mj-text font-size="24px" font-weight="bold">
+    Your Editable Headline Here
+  </mj-text>
+</div>
 
-### ❌ **DON'T:**
-- Overlap elements unless intentionally creating overlays
-- Use complex nested structures unnecessarily
-- Rely on absolute positioning
-- Create extremely narrow or wide layouts
-- Use unsupported Figma features (effects, complex masks)
+<!-- Button with editable text -->
+<div mc:edit="cta_button">
+  <mj-button background-color="#007bff" href="https://example.com">
+    Editable Button Text
+  </mj-button>
+</div>
+```
 
----
-
-## 🔧 **Advanced Features**
-
-### **Spatial Layout Detection (NEW)**
-The plugin now detects when text is placed within rectangles/frames and automatically creates proper overlays instead of placing elements sequentially.
-
-### **Hyperlink Detection (NEW)**
-- Figma native links in text are preserved
-- Both segment-level and text-level linking supported
-- Links maintain text styling with added underlines
-
-### **Smart Container Handling (NEW)**
-- Rectangles with background colors become colored background sections
-- White/transparent rectangles become images (if they have visual content)
-- Frames with children become layout containers
-- Standalone elements remain as individual blocks
-
----
-
-## 🚀 **Tips for Best Results**
-
-1. **Preview Early**: Test your design with the plugin frequently
-2. **Use Web Fonts**: Stick to web-safe fonts or specify fallbacks
-3. **Consider Email Clients**: Some features may not work in all email clients
-4. **Test Responsiveness**: Keep mobile viewing in mind
-5. **Optimize Images**: Use appropriate image sizes for email
+#### **Content Preservation**
+- Switching between templates preserves content when region names match
+- Use consistent naming across template versions for seamless updates
+- Mailchimp automatically maps content to regions with matching identifiers
 
 ---
 
-## 🐛 **Troubleshooting**
+## 📋 **Quick Reference**
+
+### **Layer Naming Patterns**
+```
+✅ Good Examples:
+- Email/Header Title
+- Email/Product Name  
+- Email/Price Display
+- Email/Button/Buy Now
+- Email/Footer/Contact Info
+
+❌ Avoid:
+- Text Layer 1
+- Button
+- Content
+- Untitled
+```
+
+### **Editable vs Non-Editable**
+```
+✅ Editable (default):
+- Email/Headline
+- Email/Button/Shop Now
+- Product Description
+
+🔒 Non-Editable:
+- Email/Company Logo/NoEdit
+- Email/Legal Text/NoEdit
+- Email/Button/Fixed Link/NoEdit
+```
+
+---
+
+## 🚨 **Troubleshooting**
 
 ### **Links Not Working?**
 - Ensure you used Figma's native link feature (Cmd+K)
@@ -150,6 +206,12 @@ The plugin now detects when text is placed within rectangles/frames and automati
 - Use frames for containers, not groups
 - Ensure proper nesting structure
 - Check element naming conventions
+
+### **Editable Regions Not Working?**
+- Verify layer names follow the `Email/[Name]` pattern
+- Check that `/NoEdit` suffix is not accidentally added
+- Ensure region names are unique and descriptive
+- Test in Mailchimp's campaign editor after template creation
 
 ---
 

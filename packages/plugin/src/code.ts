@@ -4,6 +4,34 @@ figma.showUI(__html__, { width: 380, height: 580 });
 
 const BACKEND = (figma.root.getPluginData("backendUrl") || "http://localhost:4000").toString().trim();
 
+// Generate editable region name from Figma layer name
+function generateEditRegionName(nodeName: string): { editRegionName?: string; editable: boolean } {
+  // Check if editing is disabled
+  if (nodeName.includes("/NoEdit")) {
+    return { editable: false };
+  }
+  
+  // Extract region name from Email/ prefix
+  if (nodeName.startsWith("Email/")) {
+    const regionName = nodeName
+      .replace(/^Email\//, "")
+      .replace(/\/NoEdit$/, "")
+      .replace(/[^a-zA-Z0-9\s]/g, " ")
+      .trim();
+    
+    if (regionName) {
+      return { editRegionName: regionName, editable: true };
+    }
+  }
+  
+  // Use cleaned node name as fallback
+  const cleanName = nodeName.replace(/[^a-zA-Z0-9\s]/g, " ").trim();
+  return { 
+    editRegionName: cleanName || "Content", 
+    editable: true 
+  };
+}
+
 // Send initial selection status
 function updateSelectionStatus() {
   const selection = figma.currentPage.selection[0];
@@ -47,36 +75,41 @@ figma.ui.onmessage = async (msg) => {
       console.log("buildAstAndImages completed, AST:", ast);
 
       figma.ui.postMessage({ type: "PROGRESS", step: "Compiling & pushing..." });
-      const resp = await fetch(`${BACKEND}/compile-and-push`, {
+      const response = await fetch(`${BACKEND}/compile-and-push`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ast, images, options: {
-          subject: msg.subject, preheader: msg.preheader,
-          templateName: msg.templateName, createCampaign: msg.createCampaign,
-          listId: msg.listId
-        } })
+        body: JSON.stringify({
+          ast,
+          images,
+          templateName: msg.templateName,
+          subject: msg.subject,
+          preheader: msg.preheader,
+          createCampaign: msg.createCampaign,
+          listId: msg.listId,
+          replyTo: msg.replyTo
+        })
       });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error((data && data.message) || "Compile & push failed");
 
-      figma.ui.postMessage({ type: "DONE", data });
-      figma.notify("Pushed to Mailchimp.");
-      console.log("Template ID:", data.templateId, "Campaign ID:", data.campaignId);
-      console.log("HTML:", data.html);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server error: ${response.status} ${response.statusText}\n${errorText}`);
+      }
+
+      const result = await response.json();
+      figma.ui.postMessage({ type: "DONE", result });
     }
-  } catch (e: any) {
+  } catch (e) {
     console.error("Plugin error:", e);
     figma.ui.postMessage({ type: "ERROR", message: e.message || e.toString() });
   }
 };
 
 async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, images: Record<string, string> }> {
-  const width = Math.round(frame.width);
+  console.log("buildAstAndImages called with frame:", frame.name, "type:", frame.type);
+  
   const ast: EmailAst = {
-    id: frame.id,
     name: frame.name,
-    type: "document",
-    width: Math.min(700, Math.max(320, width)),
+    width: Math.min(Math.max(frame.width, 320), 700), // Clamp to 320-700px
     background: { color: toHex((frame as any).fills) ?? "#FFFFFF" },
     sections: []
   };
@@ -107,7 +140,7 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
       blocks: []
     };
 
-    // Process all children of the main frame as blocks (simplified approach)
+    // Process all children of the main frame as blocks
     for (const child of frame.children) {
       const block = await toBlock(child as SceneNode, images);
       if (block) col.blocks.push(block);
@@ -116,40 +149,35 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
     section.columns.push(col);
     ast.sections.push(section);
   } else {
-    // Process child frames as sections (original logic)
-    for (const sn of sectionNodes) {
+    // Process each child frame as a section
+    for (const sectionNode of sectionNodes) {
       const section: Section = {
-        id: sn.id,
-        name: sn.name,
+        id: sectionNode.id,
+        name: sectionNode.name || "Section",
         type: "section",
-        background: { color: toHex((sn as any).fills) ?? undefined },
-        spacing: paddingFrom(sn),
-        fullWidth: /Email\/SectionFull/i.test(sn.name ?? ""),
+        background: { color: toHex((sectionNode as any).fills) ?? undefined },
+        spacing: paddingFrom(sectionNode),
+        fullWidth: /Email\/SectionFull/i.test(sectionNode.name),
         columns: []
       };
 
-      const isRow = (sn.layoutMode === "HORIZONTAL");
-      const colNodes = isRow ? sn.children : [sn];
-      const numCols = colNodes.length;
+      // Create a single column for this section
+      const col: Column = {
+        id: sectionNode.id + "-col",
+        name: "Column",
+        type: "column",
+        widthPercent: undefined,
+        spacing: paddingFrom(sectionNode as any),
+        blocks: []
+      };
 
-      for (const cn of colNodes) {
-        const col: Column = {
-          id: cn.id,
-          name: cn.name,
-          type: "column",
-          widthPercent: isRow ? Math.round(100 / numCols) : undefined,
-          spacing: paddingFrom(cn as any),
-          blocks: []
-        };
-
-        const blockNodes = (cn as any).children ? (cn as any).children : [cn];
-        for (const bn of blockNodes) {
-          const block = await toBlock(bn as SceneNode, images);
-          if (block) col.blocks.push(block);
-        }
-
-        section.columns.push(col);
+      // Process all children of this section as blocks
+      for (const child of sectionNode.children) {
+        const block = await toBlock(child as SceneNode, images);
+        if (block) col.blocks.push(block);
       }
+
+      section.columns.push(col);
       ast.sections.push(section);
     }
   }
@@ -198,31 +226,72 @@ async function toBlock(node: SceneNode, images: Record<string, string>): Promise
         console.log("No hyperlink data available");
       }
     }
+    
+    // Generate mc:edit properties
+    const { editRegionName, editable } = generateEditRegionName((node as any).name || "");
+    
     return {
-      id: node.id, name: (node as any).name, type: "text", html,
+      id: node.id, 
+      name: (node as any).name, 
+      type: "text", 
+      html,
       typography: {
         fontFamily: fontFamily(node as any),
         fontSize: Number((node as any).fontSize) || 16,
         color: toHex(((node as any).fills) as any) || "#000000",
         lineHeight: typeof (node as any).lineHeight === "number" ? (node as any).lineHeight : 1.4
       },
-      align: ((node as any).textAlignHorizontal && (node as any).textAlignHorizontal.toLowerCase()) || "left"
+      align: ((node as any).textAlignHorizontal && (node as any).textAlignHorizontal.toLowerCase()) || "left",
+      spacing: paddingFrom(node as any),
+      // Mailchimp Template Language support
+      editable,
+      editRegionName,
     };
   }
 
-  if (/Email\/Button/i.test(nm) && node.type === "FRAME") {
-    const textLayer = (node as FrameNode).findOne(n => n.type === "TEXT") as TextNode | null;
-    const label = textLayer ? textLayer.characters : "Button";
-    const href = ((node as BaseNode).getPluginData("href") || "#").toString();
+  if (node.type === "FRAME" && /Email\/Button/i.test(nm)) {
+    console.log("Processing BUTTON node:", node.id, "name:", nm);
+    
+    // Find text child for button text
+    const textChild = node.children.find((c): c is TextNode => c.type === "TEXT");
+    const btnText = textChild ? textChild.characters : "Button";
+    
+    // Find href from text hyperlink or use default
+    let btnHref = "#";
+    if (textChild && textChild.hyperlink && textChild.hyperlink.type === "URL") {
+      btnHref = textChild.hyperlink.value;
+    }
+    
+    // Extract colors from frame fills
+    const bgColor = toHex((node as any).fills) || "#007bff";
+    const textColor = textChild ? (toHex((textChild as any).fills) || "#ffffff") : "#ffffff";
+    
+    // Extract corner radius
+    const cornerRadius = (node as any).cornerRadius || 0;
+    
+    // Generate mc:edit properties for button
+    const { editRegionName, editable } = generateEditRegionName(nm);
+    
     return {
-      id: node.id, name: (node as any).name, type: "button",
-      text: label, href,
-      backgroundColor: toHex(((node as any).fills) as any) || "#000000",
-      color: "#FFFFFF",
-      typography: { fontSize: 16, fontWeight: 600 },
-      border: { radius: Math.round(((node as FrameNode).cornerRadius as any) || 4) },
+      id: node.id,
+      name: nm,
+      type: "button",
+      text: btnText,
+      href: btnHref,
+      backgroundColor: bgColor,
+      color: textColor,
+      typography: {
+        fontFamily: textChild ? fontFamily(textChild as any) : undefined,
+        fontSize: textChild ? Number((textChild as any).fontSize) || 16 : 16,
+        color: textColor,
+        lineHeight: textChild && typeof (textChild as any).lineHeight === "number" ? (textChild as any).lineHeight : 1.4
+      },
+      align: "center",
+      border: { radius: cornerRadius },
       spacing: paddingFrom(node as any),
-      align: "center"
+      // Mailchimp Template Language support
+      editable,
+      editRegionName,
     };
   }
 
@@ -231,22 +300,27 @@ async function toBlock(node: SceneNode, images: Record<string, string>): Promise
     const backgroundColor = toHex(((node as any).fills) as any);
     
     if (backgroundColor && backgroundColor !== "#FFFFFF") {
-      // Rectangle with color - create a container/section block
+      // Rectangle with color - create a container block
       return {
-        id: node.id, name: (node as any).name, type: "container",
+        id: node.id,
+        name: (node as any).name,
+        type: "container",
         backgroundColor,
-        spacing: paddingFrom(node as any),
-        width: Math.round(((node as LayoutMixin).width)),
-        height: Math.round(((node as LayoutMixin).height))
+        width: Math.round((node as LayoutMixin).width),
+        height: Math.round((node as LayoutMixin).height),
+        spacing: paddingFrom(node as any)
       };
     } else {
-      // Rectangle without color or white - treat as image
+      // Rectangle without color - treat as image
       const bytes = await (node as GeometryMixin).exportAsync({ format: "PNG", constraint: { type: "SCALE", value: 2 } });
       const key = node.id;
       images[key] = `data:image/png;base64,${figma.base64Encode(bytes)}`;
       return {
-        id: node.id, name: (node as any).name, type: "image",
-        key, alt: (node as any).name ?? "",
+        id: node.id, 
+        name: (node as any).name, 
+        type: "image",
+        key, 
+        alt: (node as any).name ?? "", 
         width: Math.round(((node as LayoutMixin).width)),
         align: "center",
         border: {},
@@ -260,8 +334,11 @@ async function toBlock(node: SceneNode, images: Record<string, string>): Promise
     const key = node.id;
     images[key] = `data:image/png;base64,${figma.base64Encode(bytes)}`;
     return {
-      id: node.id, name: (node as any).name, type: "image",
-      key, alt: (node as any).name ?? "",
+      id: node.id, 
+      name: (node as any).name, 
+      type: "image",
+      key, 
+      alt: (node as any).name ?? "", 
       width: Math.round(((node as LayoutMixin).width)),
       align: "center",
       border: {},
@@ -269,37 +346,53 @@ async function toBlock(node: SceneNode, images: Record<string, string>): Promise
     };
   }
 
-  if (/Email\/Divider/i.test(nm)) {
-    return { id: node.id, name: (node as any).name, type: "divider", color: "#E0E0E0", thickness: 1, spacing: {} };
+  if (node.type === "LINE" || /Email\/Divider/i.test(nm)) {
+    return {
+      id: node.id,
+      name: (node as any).name,
+      type: "divider",
+      color: toHex(((node as any).fills) as any) || "#dddddd",
+      thickness: (node as any).strokeWeight || 1,
+      spacing: paddingFrom(node as any)
+    };
   }
 
-  if (/Email\/Spacer/i.test(nm)) {
-    const h = Math.round(((node as any).height || 16));
-    return { id: node.id, name: (node as any).name, type: "spacer", height: h };
+  if (node.type === "FRAME" && /Email\/Spacer/i.test(nm)) {
+    return {
+      id: node.id,
+      name: (node as any).name,
+      type: "spacer",
+      height: Math.round((node as LayoutMixin).height)
+    };
   }
 
+  console.log("Skipping unsupported node type:", node.type, "name:", nm);
   return null;
 }
 
-/** Helpers */
-function toHex(fills: Paint[] | readonly Paint[] | undefined): string | undefined {
-  const paint = Array.isArray(fills) ? (fills as any).find((p: any) => p.type === "SOLID" && p.visible !== false) as SolidPaint : undefined;
-  if (!paint) return;
-  const { r, g, b } = paint.color;
-  const to = (v: number) => Math.round(v * 255);
-  return `#${[to(r), to(g), to(b)].map(n => n.toString(16).padStart(2,"0")).join("")}`;
+function fontFamily(node: any): string | undefined {
+  if (node.fontName && typeof node.fontName === "object") {
+    return node.fontName.family;
+  }
+  return undefined;
 }
-function paddingFrom(n: any) {
-  const p: any = {};
-  if (typeof n.paddingTop === "number") p.paddingTop = Math.round(n.paddingTop);
-  if (typeof n.paddingRight === "number") p.paddingRight = Math.round(n.paddingRight);
-  if (typeof n.paddingBottom === "number") p.paddingBottom = Math.round(n.paddingBottom);
-  if (typeof n.paddingLeft === "number") p.paddingLeft = Math.round(n.paddingLeft);
-  return p;
+
+function toHex(fills: any): string | undefined {
+  if (!fills || !Array.isArray(fills) || fills.length === 0) return undefined;
+  const fill = fills[0];
+  if (fill.type === "SOLID" && fill.color) {
+    const { r, g, b } = fill.color;
+    const toHex = (n: number) => Math.round(n * 255).toString(16).padStart(2, "0");
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  }
+  return undefined;
 }
-function fontFamily(n: any): string | undefined {
-  try { const f = n.fontName && n.fontName.family; return typeof f === "string" ? f : undefined; } catch { return undefined; }
-}
-function segToHtml(seg: any) {
-  return seg.characters.replace(/\n/g, "<br/>");
+
+function paddingFrom(node: any): any {
+  return {
+    paddingTop: node.paddingTop || 0,
+    paddingRight: node.paddingRight || 0,
+    paddingBottom: node.paddingBottom || 0,
+    paddingLeft: node.paddingLeft || 0,
+  };
 }
