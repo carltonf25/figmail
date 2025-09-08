@@ -2,11 +2,12 @@ import { Router } from "express";
 import passport from "passport";
 import { Strategy as OAuth2Strategy } from "passport-oauth2";
 import axios from "axios";
+import session from "express-session";
 
 const router = Router();
 
 // Configure session middleware (should be done in main server.ts)
-router.use(require('express-session')({
+router.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false
@@ -16,34 +17,39 @@ router.use(require('express-session')({
 router.use(passport.initialize());
 router.use(passport.session());
 
-// Mailchimp OAuth2 Strategy
-passport.use(new OAuth2Strategy({
-  authorizationURL: 'https://login.mailchimp.com/oauth2/authorize',
-  tokenURL: 'https://login.mailchimp.com/oauth2/token',
-  clientID: process.env.MC_CLIENT_ID!,
-  clientSecret: process.env.MC_CLIENT_SECRET!,
-  callbackURL: process.env.MC_REDIRECT_URI!,
-  scope: ['template', 'campaign', 'content', 'audience', 'filemanager']
-},
-async (accessToken: string, refreshToken: string, profile: any, done: Function) => {
-  try {
-    // Get metadata to determine datacenter
-    const response = await axios.get('https://login.mailchimp.com/oauth2/metadata', {
-      headers: { Authorization: `OAuth ${accessToken}` }
-    });
+// Mailchimp OAuth2 Strategy - Only initialize if OAuth credentials are available
+if (process.env.MC_CLIENT_ID && process.env.MC_CLIENT_SECRET && process.env.MC_REDIRECT_URI) {
+  passport.use(new OAuth2Strategy({
+    authorizationURL: 'https://login.mailchimp.com/oauth2/authorize',
+    tokenURL: 'https://login.mailchimp.com/oauth2/token',
+    clientID: process.env.MC_CLIENT_ID,
+    clientSecret: process.env.MC_CLIENT_SECRET,
+    callbackURL: process.env.MC_REDIRECT_URI,
+    scope: ['template', 'campaign', 'content', 'audience', 'filemanager']
+  },
+  async (accessToken: string, refreshToken: string, profile: any, done: Function) => {
+    try {
+      // Get metadata to determine datacenter
+      const response = await axios.get('https://login.mailchimp.com/oauth2/metadata', {
+        headers: { Authorization: `OAuth ${accessToken}` }
+      });
 
-    const userData = {
-      accessToken,
-      refreshToken,
-      dc: response.data.dc,
-      profile: profile
-    };
+      const userData = {
+        accessToken,
+        refreshToken,
+        dc: response.data.dc,
+        profile: profile
+      };
 
-    return done(null, userData);
-  } catch (error) {
-    return done(error);
-  }
-}));
+      return done(null, userData);
+    } catch (error) {
+      return done(error);
+    }
+  }));
+} else {
+  console.warn('⚠️  Mailchimp OAuth credentials not found. OAuth routes will not be available.');
+  console.warn('   Set MC_CLIENT_ID, MC_CLIENT_SECRET, and MC_REDIRECT_URI environment variables to enable OAuth.');
+}
 
 // Serialize user for session
 passport.serializeUser((user: any, done) => {
@@ -54,22 +60,37 @@ passport.deserializeUser((user: any, done) => {
   done(null, user);
 });
 
-// Routes
-router.get("/mailchimp/start", passport.authenticate('oauth2'));
+// Routes - OAuth routes only available if credentials are configured
+const oauthEnabled = !!(process.env.MC_CLIENT_ID && process.env.MC_CLIENT_SECRET && process.env.MC_REDIRECT_URI);
 
-router.get("/mailchimp/callback",
-  passport.authenticate('oauth2', { failureRedirect: '/auth/failed' }),
-  (req, res) => {
-    // Successful authentication
-    const user = req.user as any;
-    res.json({
-      success: true,
-      accessToken: user.accessToken,
-      dc: user.dc,
-      message: "Mailchimp connected successfully!"
+router.get("/mailchimp/start", (req, res) => {
+  if (!oauthEnabled) {
+    return res.status(400).json({
+      error: "OAuth not configured",
+      message: "Mailchimp OAuth credentials are not configured. Please set MC_CLIENT_ID, MC_CLIENT_SECRET, and MC_REDIRECT_URI environment variables."
     });
   }
-);
+  passport.authenticate('oauth2')(req, res);
+});
+
+router.get("/mailchimp/callback", (req, res, next) => {
+  if (!oauthEnabled) {
+    return res.status(400).json({
+      error: "OAuth not configured",
+      message: "Mailchimp OAuth credentials are not configured."
+    });
+  }
+  passport.authenticate('oauth2', { failureRedirect: '/auth/failed' })(req, res, next);
+}, (req, res) => {
+  // Successful authentication
+  const user = req.user as any;
+  res.json({
+    success: true,
+    accessToken: user.accessToken,
+    dc: user.dc,
+    message: "Mailchimp connected successfully!"
+  });
+});
 
 router.get("/mailchimp/status", (req, res) => {
   if (req.isAuthenticated()) {
