@@ -91,7 +91,7 @@ const SpacerBlock = z.object({
   height: PositiveNumber.default(20),
 });
 
-// Union type for all blocks
+// Union type for all blocks - optimized for Zod v4
 export const Block = z.discriminatedUnion("type", [
   TextBlock,
   ContainerBlock,
@@ -99,7 +99,7 @@ export const Block = z.discriminatedUnion("type", [
   ButtonBlock,
   DividerBlock,
   SpacerBlock,
-]);
+] as const); // 'as const' for better type inference
 
 // Column schema
 const Column = z.object({
@@ -124,10 +124,11 @@ export const EmailAst = z.object({
   sections: z.array(Section).min(1),
 });
 
-// Type exports
+// Type exports - optimized for Zod v4
 export type EmailAst = z.infer<typeof EmailAst>;
 export type Block = z.infer<typeof Block>;
 export type TextBlock = z.infer<typeof TextBlock>;
+export type ContainerBlock = z.infer<typeof ContainerBlock>;
 export type ImageBlock = z.infer<typeof ImageBlock>;
 export type ButtonBlock = z.infer<typeof ButtonBlock>;
 export type DividerBlock = z.infer<typeof DividerBlock>;
@@ -139,84 +140,105 @@ export type Spacing = z.infer<typeof Spacing>;
 export type Border = z.infer<typeof Border>;
 export type Background = z.infer<typeof Background>;
 
-// Schema validation functions
+// Schema validation functions - enhanced for Zod v4
 export function parseEmailAst(data: unknown): EmailAst {
   return EmailAst.parse(data);
+}
+
+export function safeParseEmailAst(data: unknown): { success: true; data: EmailAst } | { success: false; error: z.ZodError } {
+  return EmailAst.safeParse(data);
 }
 
 export function isValidEmailAst(data: unknown): data is EmailAst {
   return EmailAst.safeParse(data).success;
 }
 
-// Helper functions for common AST operations
+// Block type guards for better type safety
+export function isTextBlock(block: Block): block is TextBlock {
+  return block.type === "text";
+}
+
+export function isContainerBlock(block: Block): block is ContainerBlock {
+  return block.type === "container";
+}
+
+export function isImageBlock(block: Block): block is ImageBlock {
+  return block.type === "image";
+}
+
+export function isButtonBlock(block: Block): block is ButtonBlock {
+  return block.type === "button";
+}
+
+// Helper functions for common AST operations - optimized for Zod v4
 export function createTextBlock(
   html: string,
-  options: Partial<Omit<z.infer<typeof TextBlock>, "type" | "html">> = {}
-): z.infer<typeof TextBlock> {
-  return {
-    type: "text",
+  options: Partial<Omit<TextBlock, "type" | "html">> = {}
+): TextBlock {
+  return TextBlock.parse({
+    type: "text" as const,
     html,
-    align: "left",
+    align: "left" as const,
     ...options,
-  };
+  });
 }
 
 export function createImageBlock(
   key: string,
-  options: Partial<Omit<z.infer<typeof ImageBlock>, "type" | "key">> = {}
-): z.infer<typeof ImageBlock> {
-  return {
-    type: "image",
+  options: Partial<Omit<ImageBlock, "type" | "key">> = {}
+): ImageBlock {
+  return ImageBlock.parse({
+    type: "image" as const,
     key,
-    align: "center",
+    align: "center" as const,
     ...options,
-  };
+  });
 }
 
 export function createButtonBlock(
   text: string,
   href: string,
-  options: Partial<Omit<z.infer<typeof ButtonBlock>, "type" | "text" | "href">> = {}
-): z.infer<typeof ButtonBlock> {
-  return {
-    type: "button",
+  options: Partial<Omit<ButtonBlock, "type" | "text" | "href">> = {}
+): ButtonBlock {
+  return ButtonBlock.parse({
+    type: "button" as const,
     text,
     href,
-    backgroundColor: "#007bff",
-    color: "#ffffff",
-    align: "center",
+    backgroundColor: "#007bff" as const,
+    color: "#ffffff" as const,
+    align: "center" as const,
     ...options,
-  };
+  });
 }
 
 export function createColumn(
   blocks: Block[],
-  options: Partial<Omit<z.infer<typeof Column>, "blocks">> = {}
-): z.infer<typeof Column> {
-  return {
+  options: Partial<Omit<Column, "blocks">> = {}
+): Column {
+  return Column.parse({
     blocks,
     ...options,
-  };
+  });
 }
 
 export function createSection(
   columns: Column[],
-  options: Partial<Omit<z.infer<typeof Section>, "columns">> = {}
-): z.infer<typeof Section> {
-  return {
+  options: Partial<Omit<Section, "columns">> = {}
+): Section {
+  return Section.parse({
     columns,
     fullWidth: false,
     ...options,
-  };
+  });
 }
 
 export function createEmailAst(
   sections: Section[],
-  options: Partial<Omit<z.infer<typeof EmailAst>, "sections">> = {}
-): z.infer<typeof EmailAst> {
-  return {
+  options: Partial<Omit<EmailAst, "sections">> = {}
+): EmailAst {
+  return EmailAst.parse({
     sections,
     width: 600,
     ...options,
-  };
+  });
 }

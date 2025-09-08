@@ -1,4 +1,4 @@
-import { EmailAst, Block } from "@figmc/shared";
+import { EmailAst, Block, isTextBlock, isContainerBlock, isImageBlock, isButtonBlock } from "@figmc/shared";
 
 function paddingAttrs(sp?: { paddingTop?: number; paddingRight?: number; paddingBottom?: number; paddingLeft?: number; }) {
   if (!sp) return "";
@@ -23,38 +23,49 @@ function textStyle(typo: any) {
   return attrs.join(" ");
 }
 
+// Enhanced block rendering with better type safety
 function renderBlock(b: Block): string {
+  // Use type guards for better type safety and IntelliSense
+  if (isTextBlock(b)) {
+    return `<mj-text ${textStyle(b.typography)} align="${b.align}"${paddingAttrs(b.spacing)}>${b.html}</mj-text>`;
+  }
+  
+  if (isContainerBlock(b)) {
+    const bgColor = b.backgroundColor ? ` background-color="${b.backgroundColor}"` : "";
+    const height = b.height ? ` height="${b.height}px"` : "";
+    const padding = paddingAttrs(b.spacing);
+    // Create a wrapper with background color
+    return `<mj-wrapper${bgColor}${padding}><mj-section><mj-column><mj-spacer${height} /></mj-column></mj-section></mj-wrapper>`;
+  }
+  
+  if (isImageBlock(b)) {
+    const border = b.border?.width
+      ? ` border="${b.border.width}px solid ${b.border.color ?? "#000000"}"`
+      : "";
+    const width = b.width ? ` width="${b.width}px"` : "";
+    const href = b.href ? ` href="${b.href}"` : "";
+    return `<mj-image${width} align="${b.align}"${paddingAttrs(b.spacing)}${border} alt="${b.alt ?? ""}" src="${b.src || ""}"${href} />`;
+  }
+  
+  if (isButtonBlock(b)) {
+    const radius = b.border?.radius ? ` border-radius="${b.border.radius}px"` : "";
+    const border = b.border?.width
+      ? ` border="${b.border.width}px solid ${b.border.color ?? b.backgroundColor}"`
+      : "";
+    return `<mj-button href="${b.href}" align="${b.align}" background-color="${b.backgroundColor}" color="${b.color}" ${textStyle(b.typography)}${radius}${border}${paddingAttrs(b.spacing)}>${b.text}</mj-button>`;
+  }
+  
+  // Handle remaining block types with the discriminated union
   switch (b.type) {
-    case "text":
-      return `<mj-text ${textStyle(b.typography)} align="${b.align}"${paddingAttrs(b.spacing)}>${b.html}</mj-text>`;
-    case "container": {
-      const bgColor = (b as any).backgroundColor ? ` background-color="${(b as any).backgroundColor}"` : "";
-      const height = (b as any).height ? ` height="${(b as any).height}px"` : "";
-      const padding = paddingAttrs(b.spacing);
-      // Create a wrapper with background color
-      return `<mj-wrapper${bgColor}${padding}><mj-section><mj-column><mj-spacer${height} /></mj-column></mj-section></mj-wrapper>`;
-    }
-    case "image": {
-      const border =
-        b.border?.width
-          ? ` border="${b.border.width}px solid ${b.border.color ?? "#000000"}"`
-          : "";
-      const width = b.width ? ` width="${b.width}px"` : "";
-      const href = b.href ? ` href="${b.href}"` : "";
-      return `<mj-image${width} align="${b.align}"${paddingAttrs(b.spacing)}${border} alt="${b.alt ?? ""}" src="${(b as any).src || ""}"${href} />`;
-    }
-    case "button": {
-      const radius = b.border?.radius ? ` border-radius="${b.border.radius}px"` : "";
-      const border =
-        b.border?.width
-          ? ` border="${b.border.width}px solid ${b.border.color ?? b.backgroundColor}"`
-          : "";
-      return `<mj-button href="${b.href}" align="${b.align}" background-color="${b.backgroundColor}" color="${b.color}" ${textStyle(b.typography)}${radius}${border}${paddingAttrs(b.spacing)}>${b.text}</mj-button>`;
-    }
     case "divider":
       return `<mj-divider border-color="${b.color}" border-width="${b.thickness}px"${paddingAttrs(b.spacing)} />`;
     case "spacer":
       return `<mj-spacer height="${b.height}px" />`;
+    default: {
+      // This should never happen with proper typing, but provides a safety net
+      const _exhaustiveCheck: never = b;
+      throw new Error(`Unhandled block type: ${JSON.stringify(_exhaustiveCheck)}`);
+    }
   }
 }
 
