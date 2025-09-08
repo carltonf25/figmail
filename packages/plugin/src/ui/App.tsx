@@ -11,6 +11,7 @@ export default function App() {
   const [templateName, setTemplateName] = useState("Figma Template");
   const [createCampaign, setCreateCampaign] = useState(false);
   const [listId, setListId] = useState("");
+  const [replyTo, setReplyTo] = useState("");
 
   useEffect(() => {
     (window as any).onmessage = (e: MessageEvent) => {
@@ -27,7 +28,7 @@ export default function App() {
     parent.postMessage({ pluginMessage: { type: "CONNECT" } }, "*");
   }
   function push() {
-    parent.postMessage({ pluginMessage: { type: "PUSH", subject, preheader, templateName, createCampaign, listId } }, "*");
+    parent.postMessage({ pluginMessage: { type: "PUSH", subject, preheader, templateName, createCampaign, listId, replyTo } }, "*");
   }
 
   return (
@@ -67,11 +68,18 @@ export default function App() {
         <label><input type="checkbox" checked={createCampaign} onChange={e => setCreateCampaign(e.target.checked)} /> Create draft campaign</label>
       </div>
       {createCampaign && (
-        <div style={{ marginTop: 8 }}>
-          <label>Audience List ID</label>
-          <input value={listId} onChange={e => setListId(e.target.value)} style={{ width: "100%" }} placeholder="e.g. a1b2c3d4..." />
-          <small>Requires Mailchimp List ID</small>
-        </div>
+        <>
+          <div style={{ marginTop: 8 }}>
+            <label>Audience List ID</label>
+            <input value={listId} onChange={e => setListId(e.target.value)} style={{ width: "100%" }} placeholder="e.g. a1b2c3d4..." />
+            <small>Requires Mailchimp List ID</small>
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <label>Reply-To Email</label>
+            <input value={replyTo} onChange={e => setReplyTo(e.target.value)} style={{ width: "100%" }} placeholder="e.g. hello@yourdomain.com" />
+            <small>Must be a verified email in your Mailchimp account</small>
+          </div>
+        </>
       )}
       <button 
         style={{ 

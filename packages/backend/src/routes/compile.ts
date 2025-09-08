@@ -38,7 +38,7 @@ router.post("/compile-and-push", async (req, res) => {
     const listId: string | undefined = options.listId;
     const subject: string = options.subject || "Draft from Figma";
     const fromName: string = options.fromName || "Design";
-    const replyTo: string = options.replyTo || "no-reply@example.com";
+    const replyTo: string = options.replyTo || process.env.DEFAULT_REPLY_TO || "no-reply@yourdomain.com";
 
     const mappedAst = await uploadAssetsAndRewrite(ast, images);
     const mjml = astToMjml(mappedAst);
@@ -50,7 +50,26 @@ router.post("/compile-and-push", async (req, res) => {
     let campaign = null;
     if (createCampaign) {
       if (!listId) throw new Error("listId is required to create a campaign");
-      campaign = await createDraftCampaign({ listId, subject, fromName, replyTo, templateId: tpl.id });
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(replyTo)) {
+        throw new Error(`Invalid reply_to email format: ${replyTo}`);
+      }
+      
+      // Warn about placeholder domains
+      if (replyTo.includes('example.com') || replyTo.includes('yourdomain.com')) {
+        throw new Error(`Please configure a valid reply_to email. Current: ${replyTo}. Set DEFAULT_REPLY_TO in .env or pass replyTo in options.`);
+      }
+      
+      campaign = await createDraftCampaign({ 
+        listId, 
+        subject, 
+        fromName, 
+        replyTo, 
+        fromEmail: options.fromEmail || replyTo,
+        templateId: tpl.id 
+      });
       // Ensure content is set (template may already contain HTML but we set for certainty)
       await setCampaignContent(campaign.id, inlined);
     }

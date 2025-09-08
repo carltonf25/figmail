@@ -47,6 +47,14 @@ const TextBlock = z.object({
   spacing: Spacing,
 });
 
+const ContainerBlock = z.object({
+  type: z.literal("container"),
+  backgroundColor: Color.optional(),
+  width: PositiveNumber.optional(),
+  height: PositiveNumber.optional(),
+  spacing: Spacing,
+});
+
 const ImageBlock = z.object({
   type: z.literal("image"),
   key: z.string(), // Unique key for referencing the image binary data
@@ -86,6 +94,7 @@ const SpacerBlock = z.object({
 // Union type for all blocks
 export const Block = z.discriminatedUnion("type", [
   TextBlock,
+  ContainerBlock,
   ImageBlock,
   ButtonBlock,
   DividerBlock,

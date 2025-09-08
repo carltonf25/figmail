@@ -107,7 +107,7 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
       blocks: []
     };
 
-    // Process all children of the main frame as blocks
+    // Process all children of the main frame as blocks (simplified approach)
     for (const child of frame.children) {
       const block = await toBlock(child as SceneNode, images);
       if (block) col.blocks.push(block);
@@ -173,13 +173,30 @@ async function toBlock(node: SceneNode, images: Record<string, string>): Promise
       console.log("segments.map exists:", typeof segments.map);
       html = segments.map((seg: any) => {
         console.log("Processing segment:", seg);
-        return seg.characters.replace(/\n/g, "<br/>");
+        let segmentText = seg.characters.replace(/\n/g, "<br/>");
+        
+        // Check for hyperlinks in text segments
+        if (seg.hyperlink && seg.hyperlink.type === "URL") {
+          segmentText = `<a href="${seg.hyperlink.value}" style="color: inherit; text-decoration: underline;">${segmentText}</a>`;
+        }
+        
+        return segmentText;
       }).join("");
       console.log("Converted to HTML:", html);
     } catch (segError) {
       console.error("Error in segments processing:", segError);
       // Fallback to simple text extraction
       html = (node as TextNode).characters || "";
+      
+      // Check for hyperlinks in the node itself as fallback
+      try {
+        const textNode = node as TextNode;
+        if (textNode.hyperlink && textNode.hyperlink.type === "URL") {
+          html = `<a href="${textNode.hyperlink.value}" style="color: inherit; text-decoration: underline;">${html}</a>`;
+        }
+      } catch (linkError) {
+        console.log("No hyperlink data available");
+      }
     }
     return {
       id: node.id, name: (node as any).name, type: "text", html,
@@ -209,7 +226,36 @@ async function toBlock(node: SceneNode, images: Record<string, string>): Promise
     };
   }
 
-  if (node.type === "RECTANGLE" || (node.type === "FRAME" && /Email\/Image/i.test(nm))) {
+  if (node.type === "RECTANGLE") {
+    // Check if this rectangle should be a background container or an image
+    const backgroundColor = toHex(((node as any).fills) as any);
+    
+    if (backgroundColor && backgroundColor !== "#FFFFFF") {
+      // Rectangle with color - create a container/section block
+      return {
+        id: node.id, name: (node as any).name, type: "container",
+        backgroundColor,
+        spacing: paddingFrom(node as any),
+        width: Math.round(((node as LayoutMixin).width)),
+        height: Math.round(((node as LayoutMixin).height))
+      };
+    } else {
+      // Rectangle without color or white - treat as image
+      const bytes = await (node as GeometryMixin).exportAsync({ format: "PNG", constraint: { type: "SCALE", value: 2 } });
+      const key = node.id;
+      images[key] = `data:image/png;base64,${figma.base64Encode(bytes)}`;
+      return {
+        id: node.id, name: (node as any).name, type: "image",
+        key, alt: (node as any).name ?? "",
+        width: Math.round(((node as LayoutMixin).width)),
+        align: "center",
+        border: {},
+        spacing: paddingFrom(node as any)
+      };
+    }
+  }
+
+  if (node.type === "FRAME" && /Email\/Image/i.test(nm)) {
     const bytes = await (node as GeometryMixin).exportAsync({ format: "PNG", constraint: { type: "SCALE", value: 2 } });
     const key = node.id;
     images[key] = `data:image/png;base64,${figma.base64Encode(bytes)}`;

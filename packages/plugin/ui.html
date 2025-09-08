@@ -101,6 +101,10 @@
         <label for="listId">Audience List ID</label>
         <input type="text" id="listId" placeholder="e.g. a1b2c3d4...">
         <small>Requires Mailchimp List ID</small>
+        
+        <label for="replyTo">Reply-To Email</label>
+        <input type="email" id="replyTo" placeholder="e.g. hello@yourdomain.com">
+        <small>Must be a verified email in your Mailchimp account</small>
     </div>
     
     <button id="pushBtn">Compile & Push</button>
@@ -132,6 +136,7 @@
             const preheader = document.getElementById('preheader').value;
             const createCampaign = document.getElementById('createCampaign').checked;
             const listId = document.getElementById('listId').value;
+            const replyTo = document.getElementById('replyTo').value;
             
             parent.postMessage({ 
                 pluginMessage: { 
@@ -140,7 +145,8 @@
                     subject, 
                     preheader, 
                     createCampaign, 
-                    listId 
+                    listId,
+                    replyTo
                 } 
             }, "*");
         });

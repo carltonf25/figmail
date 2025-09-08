@@ -34,11 +34,13 @@ figchimp/
 │  │     ├─ routes/
 │  │     │  ├─ auth.ts         # Mailchimp OAuth flow
 │  │     │  └─ compile.ts      # compile & push endpoints
-│  │     └─ services/
-│  │        ├─ astToMjml.ts    # AST → MJML compiler
-│  │        ├─ mergeTags.ts    # Merge tag replacer
-│  │        ├─ assets.ts       # Uploads images to S3 and rewrites AST
-│  │        └─ mailchimp.ts    # Mailchimp Templates & Campaigns API calls
+│  │     ├─ services/
+│  │     │  ├─ astToMjml.ts    # AST → MJML compiler
+│  │     │  ├─ mergeTags.ts    # Merge tag replacer
+│  │     │  ├─ assets.ts       # Uploads images to S3 and rewrites AST
+│  │     │  └─ mailchimp.ts    # Mailchimp Templates & Campaigns API calls
+│  │     └─ utils/
+│  │        └─ debug.ts        # Debug utilities and logging
 │  │
 │  └─ plugin/                  # Figma plugin (React UI + controller)
 │     ├─ package.json
@@ -60,9 +62,10 @@ figchimp/
 - **Purpose:** Defines the **Email AST schema** and validation logic.
 - **Tech:** TypeScript + [Zod](https://zod.dev/).
 - **Exports:**
-  - `ast.ts` — Figma primitives → email-safe AST (Text, Image, Button, etc.)
+  - `ast.ts` — Figma primitives → email-safe AST (Text, Image, Button, Container, Divider, Spacer)
   - `validate.ts` — guardrails (max width, column totals, etc.)
 - **Used by:** Backend for validation + compile, Plugin for AST construction.
+- **Features:** Hyperlink detection, background color containers, spatial layout detection.
 
 ---
 
@@ -92,7 +95,8 @@ figchimp/
   - `ui/` — React interface for:
     - Mailchimp connect.
     - Subject, preheader, template name input.
-    - “Compile & Push” button.
+    - Campaign creation with audience list ID and reply-to email.
+    - "Compile & Push" button with selection status.
 - **Build:** via Vite (`vite.config.ts`), outputs `code.js` and UI bundle referenced in `manifest.json`.
 
 ---
@@ -138,16 +142,44 @@ Backend requires `.env`:
 MC_ACCESS_TOKEN=your_mailchimp_access_token
 MC_DC=usXX
 
-# S3 for asset hosting
+# S3 for asset hosting (optional - falls back to data URIs if not configured)
 S3_BUCKET=your-bucket
 S3_PREFIX=emails
 AWS_REGION=us-east-1
+
+# Email defaults
+DEFAULT_REPLY_TO=hello@yourdomain.com
+
+# Debug settings (optional)
+DEBUG=true
+DEBUG_LEVEL=info
 ```
+
+---
+
+## Documentation
+
+- **[FIGMA_CONVENTIONS.md](./FIGMA_CONVENTIONS.md)** — Complete guide to designing emails in Figma
+- **[packages/backend/DEBUG.md](./packages/backend/DEBUG.md)** — Backend debugging guide
+
+### Key Features
+
+- **🔗 Hyperlink Support:** Text links created in Figma (Cmd+K) become clickable in emails
+- **🎨 Background Colors:** Colored rectangles become background sections in emails
+- **📧 Campaign Creation:** Create draft campaigns with audience lists and reply-to emails
+- **🖼️ Smart Images:** Automatic image export and optimization
+- **📐 Layout Detection:** Intelligent conversion of Figma layouts to email-safe HTML
 
 ---
 
 ## Roadmap
 - ✅ MVP: Figma → Template
-- 🔄 OAuth token store per user
-- 🔄 List/Audience picker
+- ✅ Campaign creation with audience lists
+- ✅ Reply-to email configuration
+- ✅ Hyperlink support in text
+- ✅ Background color containers
+- ✅ Debugging and error handling
+- 🔄 OAuth token store per user (currently uses server-side tokens)
+- 🔄 Visual audience list picker
 - 🔄 Team features (brand tokens, shared workspaces)
+- 🔄 Advanced layout features (multi-column, nested sections)

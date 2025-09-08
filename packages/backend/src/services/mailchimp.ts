@@ -59,6 +59,7 @@ export async function createDraftCampaign(opts: {
   fromName: string;
   replyTo: string;
   templateId?: number;
+  fromEmail?: string;
 }) {
   console.log("=== CREATING MAILCHIMP CAMPAIGN ===");
   console.log("Campaign options:", opts);
@@ -70,6 +71,7 @@ export async function createDraftCampaign(opts: {
       subject_line: opts.subject,
       from_name: opts.fromName,
       reply_to: opts.replyTo,
+      from_email: opts.fromEmail || opts.replyTo, // Use reply_to as from_email if not specified
       template_id: opts.templateId
     }
   };

@@ -26,7 +26,14 @@ function textStyle(typo: any) {
 function renderBlock(b: Block): string {
   switch (b.type) {
     case "text":
-      return `<mj-text ${textStyle(b.typography)} align="${b.align}">${b.html}</mj-text>`;
+      return `<mj-text ${textStyle(b.typography)} align="${b.align}"${paddingAttrs(b.spacing)}>${b.html}</mj-text>`;
+    case "container": {
+      const bgColor = (b as any).backgroundColor ? ` background-color="${(b as any).backgroundColor}"` : "";
+      const height = (b as any).height ? ` height="${(b as any).height}px"` : "";
+      const padding = paddingAttrs(b.spacing);
+      // Create a wrapper with background color
+      return `<mj-wrapper${bgColor}${padding}><mj-section><mj-column><mj-spacer${height} /></mj-column></mj-section></mj-wrapper>`;
+    }
     case "image": {
       const border =
         b.border?.width
