@@ -1,5 +1,5 @@
 {
-  "name": "@figmc/plugin",
+  "name": "@figmail/plugin",
   "version": "0.1.0",
   "type": "module",
   "scripts": {

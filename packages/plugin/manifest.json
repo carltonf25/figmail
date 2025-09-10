@@ -1,5 +1,5 @@
 {
-  "name": "Figma → Mailchimp",
+  "name": "FigMail",
   "id": "figma-mailchimp-plugin",
   "api": "1.0.0",
   "editorType": ["figma"],

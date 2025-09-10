@@ -1,5 +1,5 @@
 {
-  "name": "@figmc/backend",
+  "name": "@figmail/backend",
   "version": "0.2.0",
   "type": "module",
   "main": "dist/server.js",
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.637.0",
-    "@figmc/shared": "workspace:*",
+    "@figmail/shared": "workspace:*",
     "@types/express-session": "^1.18.2",
     "@types/passport": "^1.0.17",
     "axios": "^1.7.2",

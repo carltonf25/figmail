@@ -52,11 +52,11 @@ router.post("/compile-and-download", async (req, res) => {
     // Add mc:edit attributes back to text and button elements
     // This is a simplified approach - in production you might want more sophisticated parsing
     processedHtml = processedHtml.replace(
-      /(<(?:div|p|span)[^>]*)(>)([^<]*Welcome to FigChimp[^<]*)/g,
+      /(<(?:div|p|span)[^>]*)(>)([^<]*Welcome to FigMail[^<]*)/g,
       '$1 mc:edit="edit_headline"$2$3'
     );
     processedHtml = processedHtml.replace(
-      /(<a[^>]*href="https:\/\/figchimp\.com"[^>]*)(>)([^<]*Get Started Now[^<]*)/g,
+      /(<a[^>]*href="https:\/\/figmail\.com"[^>]*)(>)([^<]*Get Started Now[^<]*)/g,
       '$1 mc:edit="edit_cta_button"$2$3'
     );
 

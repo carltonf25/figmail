@@ -94,9 +94,9 @@ export default function App() {
 
   return (
     <div style={{ fontFamily: "Inter, system-ui, sans-serif", padding: 12, width: 360 }}>
-      <h3>🎨 FigChimp</h3>
+      <h3>🎨 FigMail</h3>
       <p style={{ fontSize: 12, color: "#666", marginBottom: 16 }}>
-        Convert Figma designs to Mailchimp email templates
+        Convert Figma designs to email templates
       </p>
 
       {/* OAuth Status */}
@@ -177,7 +177,7 @@ export default function App() {
           </p>
           <ol style={{ margin: '0 0 8px 0', paddingLeft: 16 }}>
             <li>Sign in to your Mailchimp account</li>
-            <li>Click "Allow" to grant FigChimp access</li>
+            <li>Click "Allow" to grant FigMail access</li>
             <li>Return to this plugin</li>
           </ol>
           {oauthUrl && (

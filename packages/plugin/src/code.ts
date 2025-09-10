@@ -68,7 +68,7 @@ figma.ui.onmessage = async (msg) => {
 
 1. Click the link that opens in your browser
 2. Sign in to your Mailchimp account
-3. Grant permission for FigChimp to access your templates and campaigns
+3. Grant permission for FigMail to access your templates and campaigns
 4. You'll be redirected back and can continue using the plugin
 
 The authorization page should open automatically.

@@ -1,6 +1,6 @@
-# FigChimp — Figma → Mailchimp Bridge
+# FigMail — Figma → Email Bridge
 
-Design marketing emails directly in **Figma** and publish them as **responsive Mailchimp templates or draft campaigns** — with one click.
+Design marketing emails directly in **Figma** and publish them as **responsive email templates** — with one click.
 
 This monorepo contains the full stack:
 
@@ -13,7 +13,7 @@ This monorepo contains the full stack:
 ## Project Structure
 
 ```
-figchimp/
+figmail/
 ├─ pnpm-workspace.yaml         # workspace configuration
 ├─ package.json                # root scripts (build, dev, lint)
 ├─ tsconfig.json               # project references
@@ -58,7 +58,7 @@ figchimp/
 
 ## Package Details
 
-### `@figmc/shared`
+### `@figmail/shared`
 - **Purpose:** Defines the **Email AST schema** and validation logic.
 - **Tech:** TypeScript + [Zod](https://zod.dev/).
 - **Exports:**
@@ -69,7 +69,7 @@ figchimp/
 
 ---
 
-### `@figmc/backend`
+### `@figmail/backend`
 - **Purpose:** Express API server to **compile Figma ASTs to Mailchimp-ready HTML** and push them to Mailchimp.
 - **Endpoints:**
   - `GET /health` — health check.
@@ -85,7 +85,7 @@ figchimp/
 
 ---
 
-### `@figmc/plugin`
+### `@figmail/plugin`
 - **Purpose:** The **Figma plugin** installed by users.
 - **Components:**
   - `code.ts` — plugin controller:
@@ -114,12 +114,12 @@ pnpm install
 
 ### Run backend
 ```bash
-pnpm --filter @figmc/backend dev
+pnpm --filter @figmail/backend dev
 ```
 
 ### Run plugin (UI build)
 ```bash
-pnpm --filter @figmc/plugin dev
+pnpm --filter @figmail/plugin dev
 ```
 
 Then in **Figma**:
@@ -128,7 +128,7 @@ Then in **Figma**:
 
 ### Build shared types
 ```bash
-pnpm --filter @figmc/shared build
+pnpm --filter @figmail/shared build
 ```
 
 ---

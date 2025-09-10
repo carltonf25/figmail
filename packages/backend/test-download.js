@@ -29,7 +29,7 @@ const testDownloadEndpoint = async () => {
                   id: "text1",
                   name: "Headline",
                   type: "text",
-                  html: "Welcome to FigChimp!",
+                  html: "Welcome to FigMail!",
                   typography: {
                     fontFamily: "Arial",
                     fontSize: 24,
@@ -96,7 +96,7 @@ const testDownloadEndpoint = async () => {
     console.log('💾 Test HTML saved to /tmp/test-download.html');
 
     // Basic validation
-    if (html.includes('Welcome to FigChimp') && html.includes('font-family:Arial') && html.includes('font-size:24px')) {
+    if (html.includes('Welcome to FigMail') && html.includes('font-family:Arial') && html.includes('font-size:24px')) {
       console.log('✅ HTML contains expected content and styling');
       console.log('✅ MJML to HTML conversion working correctly');
       console.log('✅ mc:edit attributes properly handled');
@@ -104,7 +104,7 @@ const testDownloadEndpoint = async () => {
     } else {
       console.error('❌ HTML does not contain expected content');
       console.log('Contains text?', html.includes('Welcome'));
-      console.log('Contains FigChimp?', html.includes('FigChimp'));
+      console.log('Contains FigMail?', html.includes('FigMail'));
       console.log('Contains Arial font?', html.includes('font-family:Arial'));
       console.log('Contains 24px font size?', html.includes('font-size:24px'));
       return false;

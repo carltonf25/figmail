@@ -1,7 +1,7 @@
 import fs from 'fs';
 
 const testDownloadFeature = async () => {
-  console.log('🚀 Testing FigChimp Download HTML Feature');
+  console.log('🚀 Testing FigMail Download HTML Feature');
   console.log('=' .repeat(50));
 
   try {
@@ -40,7 +40,7 @@ const testDownloadFeature = async () => {
                   id: "headline",
                   name: "Email/Headline",
                   type: "text",
-                  html: "Welcome to FigChimp!",
+                  html: "Welcome to FigMail!",
                   typography: {
                     fontFamily: "Arial, sans-serif",
                     fontSize: 28,
@@ -91,7 +91,7 @@ const testDownloadFeature = async () => {
                   id: "body-text",
                   name: "Email/Body",
                   type: "text",
-                  html: "This email was created using FigChimp - the easiest way to convert Figma designs into responsive email templates. Features include automatic MJML compilation, inline CSS, and Mailchimp template language support.",
+                  html: "This email was created using FigMail - the easiest way to convert Figma designs into responsive email templates. Features include automatic MJML compilation, inline CSS, and Mailchimp template language support.",
                   typography: {
                     fontFamily: "Arial, sans-serif",
                     fontSize: 14,
@@ -146,7 +146,7 @@ const testDownloadFeature = async () => {
                   id: "footer-text",
                   name: "Email/Footer",
                   type: "text",
-                  html: "© 2024 FigChimp. All rights reserved.",
+                  html: "© 2024 FigMail. All rights reserved.",
                   typography: {
                     fontFamily: "Arial, sans-serif",
                     fontSize: 12,
@@ -173,7 +173,7 @@ const testDownloadFeature = async () => {
       body: JSON.stringify({
         ast: testAst,
         images: {},
-        templateName: 'FigChimp Test Newsletter'
+        templateName: 'FigMail Test Newsletter'
       })
     });
 
@@ -193,7 +193,7 @@ const testDownloadFeature = async () => {
     console.log('\n✅ Test 3: HTML Content Validation');
 
     const validations = [
-      { test: 'Welcome to FigChimp!', description: 'Main headline text' },
+      { test: 'Welcome to FigMail!', description: 'Main headline text' },
       { test: 'Your Figma designs converted', description: 'Subheadline text' },
       { test: 'Get Started Now', description: 'CTA button text' },
       { test: 'mc:edit="edit_headline"', description: 'mc:edit attribute for headline' },
@@ -220,7 +220,7 @@ const testDownloadFeature = async () => {
     const contentDisposition = downloadResponse.headers.get('content-disposition');
     const contentType = downloadResponse.headers.get('content-type');
 
-    if (contentDisposition && contentDisposition.includes('attachment') && contentDisposition.includes('FigChimp_Test_Newsletter.html')) {
+    if (contentDisposition && contentDisposition.includes('attachment') && contentDisposition.includes('FigMail_Test_Newsletter.html')) {
       console.log('✅ Content-Disposition header correct');
     } else {
       console.log('❌ Content-Disposition header incorrect:', contentDisposition);

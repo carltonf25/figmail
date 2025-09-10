@@ -1,6 +1,6 @@
 # Mailchimp OAuth2 Setup Guide
 
-This guide will help you set up proper OAuth2 authentication for FigChimp with Mailchimp.
+This guide will help you set up proper OAuth2 authentication for FigMail with Mailchimp.
 
 ## 🚀 Prerequisites
 
@@ -13,7 +13,7 @@ This guide will help you set up proper OAuth2 authentication for FigChimp with M
 1. Go to [Mailchimp Developer Portal](https://developer.mailchimp.com/)
 2. Click **"Create App"**
 3. Fill in the app details:
-   - **App name**: FigChimp
+   - **App name**: FigMail
    - **App description**: Figma to Mailchimp email converter
    - **App website**: `http://localhost:4000` (for development)
    - **Redirect URI**: `http://localhost:4000/auth/mailchimp/callback`
@@ -73,7 +73,7 @@ pnpm install
 3. **Test OAuth initiation**:
    - Visit `http://localhost:4000/auth/mailchimp/start`
    - This should redirect you to Mailchimp's authorization page
-   - Grant permission for FigChimp
+   - Grant permission for FigMail
    - You should be redirected back to the callback URL
 
 ## 🧪 Step 5: Test in Figma Plugin
@@ -154,7 +154,7 @@ The OAuth system provides these endpoints:
 
 Once set up correctly, your users will be able to:
 1. Click "Connect Mailchimp" in the Figma plugin
-2. Authorize FigChimp access to their Mailchimp account
+2. Authorize FigMail access to their Mailchimp account
 3. Use the plugin to convert Figma designs to Mailchimp templates
 4. Create draft campaigns directly from Figma
 
