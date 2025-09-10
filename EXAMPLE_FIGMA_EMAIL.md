@@ -457,6 +457,44 @@ Here's the full hierarchy you should see in Figma:
 
 ---
 
+## 🎯 **Quick Start Templates**
+
+FigMail now includes **premade email templates** that you can insert with one click! Instead of starting from scratch, choose from professionally designed templates:
+
+### **Available Templates:**
+- **📰 Newsletter Layout** - Classic newsletter with header, content, and footer
+- **🎉 Promotional Email** - Eye-catching promotional layout with hero image
+- **📦 Product Showcase** - Display multiple products in an attractive grid
+- **📅 Event Invitation** - Perfect for event announcements and RSVPs
+- **👋 Welcome Email** - Warm welcome email for new subscribers
+- **📊 2-Column Basic** - Simple two-column layout with image and text
+- **📋 3-Column Features** - Three-column layout for feature highlights
+
+### **How to Use Templates:**
+1. **Open FigMail plugin** in Figma
+2. **Scroll to "Quick Start Templates"** section
+3. **Select a template** from the dropdown
+4. **Click "✨ Insert Template"**
+5. **Customize** the inserted template to your needs
+6. **Export** using "Download HTML" or "Compile & Push"
+
+### **Template Features:**
+- ✅ **Proper naming conventions** - All elements follow `Email/[Name]` pattern
+- ✅ **Responsive design** - Templates work on mobile and desktop
+- ✅ **Mailchimp compatible** - Includes mc:edit regions for content editing
+- ✅ **Professional styling** - Colors, fonts, and spacing optimized for email
+- ✅ **Hyperlinks ready** - CTA buttons and links pre-configured
+
+### **Customizing Templates:**
+After inserting a template, you can:
+- **Edit text content** - Change headlines, descriptions, and CTAs
+- **Replace images** - Add your own product photos or graphics
+- **Modify colors** - Update brand colors and styling
+- **Adjust layout** - Add/remove sections as needed
+- **Add hyperlinks** - Connect buttons and text to your URLs
+
+---
+
 ## 🚀 **Testing Your Design**
 
 ### **Before Exporting:**

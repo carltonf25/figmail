@@ -1,4 +1,5 @@
-import type { EmailAst, Section, Column, Block } from "@figmc/shared";
+import type { EmailAst, Section, Column, Block } from "@figmail/shared";
+import { templates, type EmailTemplate, type TemplateElement, type TemplateSection } from "./templates";
 
 figma.showUI(__html__, { width: 380, height: 580 });
 
@@ -214,6 +215,12 @@ The authorization page should open automatically.
       figma.ui.postMessage({ type: "DONE" });
       console.log("Download HTML completed successfully");
     }
+
+    if (msg.type === "INSERT_TEMPLATE") {
+      console.log("Inserting template:", msg.templateType);
+      await insertTemplate(msg.templateType);
+      figma.ui.postMessage({ type: "DONE" });
+    }
   } catch (e) {
     console.error("Plugin error:", e);
     figma.ui.postMessage({ type: "ERROR", message: e.message || e.toString() });
@@ -256,8 +263,8 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
       blocks: []
     };
 
-    // Process all children of the main frame as blocks (reverse order for correct visual stacking)
-    for (const child of frame.children.slice().reverse()) {
+    // Process all children of the main frame as blocks (maintain intended order)
+    for (const child of frame.children) {
       const block = await toBlock(child as SceneNode, images);
       if (block) col.blocks.push(block);
     }
@@ -285,8 +292,8 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
         // Multi-column layout: process each column frame
         const columnsWithWidths: Array<{ frame: FrameNode; widthPercent?: number }> = [];
 
-        // First pass: parse widths from frame names
-        for (const columnFrame of columnFrames.slice().reverse()) {
+        // First pass: parse widths from frame names (maintain left-to-right order)
+        for (const columnFrame of columnFrames) {
           const widthPercent = parseColumnWidth(columnFrame.name, sectionNode.width);
           columnsWithWidths.push({ frame: columnFrame, widthPercent });
         }
@@ -317,8 +324,8 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
             blocks: []
           };
 
-          // Process all children of this column as blocks (reverse order for correct visual stacking)
-          for (const child of columnFrame.children.slice().reverse()) {
+          // Process all children of this column as blocks (maintain intended order)
+          for (const child of columnFrame.children) {
             const block = await toBlock(child as SceneNode, images);
             if (block) col.blocks.push(block);
           }
@@ -336,8 +343,8 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
           blocks: []
         };
 
-        // Process all children of this section as blocks (reverse order for correct visual stacking)
-        for (const child of sectionNode.children.slice().reverse()) {
+        // Process all children of this section as blocks (maintain intended order)
+        for (const child of sectionNode.children) {
           const block = await toBlock(child as SceneNode, images);
           if (block) col.blocks.push(block);
         }
@@ -350,6 +357,195 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
   }
 
   return { ast, images };
+}
+
+// Insert a premade email template into the current page
+async function insertTemplate(templateType: string): Promise<void> {
+  const template = templates[templateType];
+  if (!template) {
+    throw new Error(`Template "${templateType}" not found`);
+  }
+
+  // Calculate position for the new frame (center it on screen)
+  const viewport = figma.viewport;
+  const centerX = viewport.center.x - template.width / 2;
+  const centerY = viewport.center.y - template.height / 2;
+
+  // Create main email frame
+  const mainFrame = figma.createFrame();
+  mainFrame.name = template.name;
+  mainFrame.resize(template.width, template.height);
+  mainFrame.x = Math.max(0, centerX);
+  mainFrame.y = Math.max(0, centerY);
+  mainFrame.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }]; // White background
+
+  // Create sections and elements
+  for (const section of template.sections) {
+    await createTemplateSection(mainFrame, section);
+  }
+
+  // Add to current page and select it
+  figma.currentPage.appendChild(mainFrame);
+  figma.currentPage.selection = [mainFrame];
+
+  // Zoom to fit the new frame
+  figma.viewport.scrollAndZoomIntoView([mainFrame]);
+
+  figma.notify(`✅ Template "${template.name}" inserted! Ready to customize.`, { timeout: 3000 });
+}
+
+// Create a section from template definition
+async function createTemplateSection(parent: FrameNode, section: TemplateSection): Promise<void> {
+  const sectionFrame = figma.createFrame();
+  sectionFrame.name = section.name;
+  sectionFrame.resize(section.width, section.height);
+  sectionFrame.x = section.x;
+  sectionFrame.y = section.y;
+
+  if (section.backgroundColor) {
+    const color = hexToRgb(section.backgroundColor);
+    sectionFrame.fills = [{ type: 'SOLID', color }];
+  }
+
+  // Create all child elements
+  for (const element of section.children) {
+    await createTemplateElement(sectionFrame, element);
+  }
+
+  parent.appendChild(sectionFrame);
+}
+
+// Create an element from template definition
+async function createTemplateElement(parent: FrameNode, element: TemplateElement): Promise<void> {
+  let node: SceneNode;
+
+  if (element.type === 'frame') {
+    const frame = figma.createFrame();
+    frame.name = element.name;
+    frame.resize(element.width, element.height);
+    frame.x = element.x;
+    frame.y = element.y;
+
+    if (element.backgroundColor) {
+      const color = hexToRgb(element.backgroundColor);
+      frame.fills = [{ type: 'SOLID', color }];
+    }
+
+    if (element.borderRadius) {
+      frame.cornerRadius = element.borderRadius;
+    }
+
+    // Create child elements
+    if (element.children) {
+      for (const child of element.children) {
+        await createTemplateElement(frame, child);
+      }
+    }
+
+    node = frame;
+  } else if (element.type === 'text') {
+    const textNode = figma.createText();
+    textNode.name = element.name;
+    textNode.resize(element.width, element.height);
+    textNode.x = element.x;
+    textNode.y = element.y;
+
+    // Load font before setting characters (required by Figma API)
+    const isBold = element.fontWeight === 'bold' ||
+                   element.fontWeight === '700' ||
+                   parseInt(element.fontWeight || '400') >= 600;
+    const fontName = {
+      family: 'Inter',
+      style: isBold ? 'Bold' : 'Regular'
+    };
+
+    try {
+      await figma.loadFontAsync(fontName);
+
+      // Set text properties first
+      if (element.fontSize) {
+        textNode.fontSize = element.fontSize;
+      }
+      if (element.fontWeight) {
+        textNode.fontWeight = parseInt(element.fontWeight) || 400;
+      }
+      if (element.textAlign) {
+        textNode.textAlignHorizontal = element.textAlign.toUpperCase() as 'LEFT' | 'CENTER' | 'RIGHT';
+      }
+
+      // Set text content after font is loaded
+      if (element.content) {
+        textNode.characters = element.content;
+      }
+    } catch (fontError) {
+      console.warn(`Failed to load font ${fontName.family} ${fontName.style}, using system font:`, fontError);
+
+      // Fallback: try to load a system font
+      try {
+        await figma.loadFontAsync({ family: 'Arial', style: 'Regular' });
+        textNode.fontName = { family: 'Arial', style: 'Regular' };
+
+        // Set properties with fallback font
+        if (element.fontSize) {
+          textNode.fontSize = element.fontSize;
+        }
+        if (element.fontWeight) {
+          textNode.fontWeight = parseInt(element.fontWeight) || 400;
+        }
+        if (element.textAlign) {
+          textNode.textAlignHorizontal = element.textAlign.toUpperCase() as 'LEFT' | 'CENTER' | 'RIGHT';
+        }
+
+        if (element.content) {
+          textNode.characters = element.content;
+        }
+      } catch (fallbackError) {
+        console.error('Failed to load fallback font:', fallbackError);
+        // Last resort: set content without font loading
+        if (element.content) {
+          textNode.characters = element.content;
+        }
+      }
+    }
+
+    // Set hyperlink if specified
+    if (element.hyperlink) {
+      textNode.setPluginData('hyperlink', element.hyperlink);
+    }
+
+    node = textNode;
+  } else if (element.type === 'rectangle') {
+    const rect = figma.createRectangle();
+    rect.name = element.name;
+    rect.resize(element.width, element.height);
+    rect.x = element.x;
+    rect.y = element.y;
+
+    if (element.backgroundColor) {
+      const color = hexToRgb(element.backgroundColor);
+      rect.fills = [{ type: 'SOLID', color }];
+    }
+
+    if (element.borderRadius) {
+      rect.cornerRadius = element.borderRadius;
+    }
+
+    node = rect;
+  } else {
+    throw new Error(`Unknown element type: ${element.type}`);
+  }
+
+  parent.appendChild(node);
+}
+
+// Convert hex color to RGB
+function hexToRgb(hex: string): { r: number, g: number, b: number } {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16) / 255,
+    g: parseInt(result[2], 16) / 255,
+    b: parseInt(result[3], 16) / 255,
+  } : { r: 1, g: 1, b: 1 };
 }
 
 // Parse column width from frame name (e.g., "Email/Column/50%" or "Email/Column/Left")

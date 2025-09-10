@@ -13,182 +13,341 @@
             width: 360px;
         }
 
-        h3 {
-            margin: 0 0 16px 0;
-            font-size: 14px;
-            font-weight: 600;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
 
-        p {
+        .container {
+            max-width: 380px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h3 {
             margin: 0 0 16px 0;
-            color: #666;
-            font-size: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            letter-spacing: -0.025em;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 12px;
+            display: block;
         }
 
         .status-box {
-            padding: 8px;
-            border-radius: 4px;
-            margin-bottom: 12px;
-            font-size: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            border: none;
         }
 
         .status-connected {
-            background: #e8f5e8;
-            border: 1px solid #c8e6c9;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            border-left: 4px solid #059669;
         }
 
         .status-disconnected {
-            background: #fff3e0;
-            border: 1px solid #ffcc80;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #92400e;
+            border-left: 4px solid #d97706;
         }
 
         .status-selected {
-            background: #e8f5e8;
-            border: 1px solid #c8e6c9;
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+            border-left: 4px solid #2563eb;
         }
 
         .status-unselected {
-            background: #fff3e0;
-            border: 1px solid #ffcc80;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            color: #6b7280;
+            border-left: 4px solid #9ca3af;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
         }
 
         label {
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             font-weight: 500;
+            font-size: 13px;
+            color: #374151;
         }
 
         input[type="text"], input[type="email"] {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-bottom: 12px;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 13px;
+            background: white;
             box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"]:focus, input[type="email"]:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
         input[type="checkbox"] {
             margin-right: 8px;
+            accent-color: #3b82f6;
         }
 
-        button {
-            background: #007AFF;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-size: 12px;
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
             cursor: pointer;
-            width: 100%;
-            margin-bottom: 8px;
+            border: none;
+            transition: all 0.2s ease;
+            flex: 1;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
         }
 
-        button:hover {
-            background: #0056b3;
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
         }
 
-        button:disabled {
-            background: #6c757d;
+        .btn-primary:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            color: #374151;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
             cursor: not-allowed;
-        }
-
-        .download-btn {
-            background: #17a2b8;
-        }
-
-        .download-btn:hover {
-            background: #138496;
-        }
-
-        .push-btn {
-            background: #28a745;
-        }
-
-        .push-btn:hover {
-            background: #1e7e34;
+            transform: none !important;
         }
 
         .progress {
-            color: #666;
-            font-style: italic;
-            margin-top: 12px;
-            padding: 8px;
-            background: #e3f2fd;
-            border-radius: 4px;
-            border: 1px solid #2196f3;
+            color: #6b7280;
+            font-style: normal;
+            margin-top: 16px;
+            padding: 12px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 8px;
+            border: 1px solid #0ea5e9;
+            text-align: center;
         }
 
         .checkbox-container {
+            display: flex;
+            align-items: center;
             margin: 12px 0;
+            padding: 8px;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+
+        .mailchimp-fields {
+            display: none;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .mailchimp-fields.show {
+            display: block;
         }
 
         small {
-            color: #666;
+            color: #6b7280;
             display: block;
             margin-top: 4px;
+            font-size: 12px;
         }
 
         .help-text {
-            font-size: 11px;
-            color: #666;
-            margin-top: 8px;
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 16px;
             text-align: center;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 6px;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 13px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <h3>🎨 FigMail</h3>
-    <p>Convert Figma designs to email templates</p>
+    <div class="container">
+        <div class="card">
+            <h3>🎨 FigMail</h3>
+            <p style="color: #6b7280; margin-bottom: 20px;">Convert Figma designs to email templates</p>
 
-    <!-- OAuth Status -->
-    <div id="oauthStatus" class="status-box status-disconnected">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span>⚠️</span>
-            <strong>Not connected to Mailchimp</strong>
-        </div>
-        <button id="connectBtn">Connect Mailchimp</button>
-    </div>
+            <!-- Selection Status -->
+            <div id="selectionStatus" class="status-box status-unselected">
+                <span>⚠️ Selection: No selection</span>
+            </div>
 
-    <!-- Selection Status -->
-    <div id="selectionStatus" class="status-box status-unselected">
-        <span>⚠️ Selection: No selection</span>
-    </div>
+            <!-- Template Section -->
+            <div class="form-group">
+                <label class="section-title">🎯 Quick Start Templates</label>
+                <select id="templateSelect">
+                    <option value="">Choose a template...</option>
+                    <option value="newsletter">📰 Newsletter Layout</option>
+                    <option value="promotional">🎉 Promotional Email</option>
+                    <option value="product-showcase">📦 Product Showcase</option>
+                    <option value="event-invite">📅 Event Invitation</option>
+                    <option value="welcome">👋 Welcome Email</option>
+                    <option value="2-column-basic">📊 2-Column Basic</option>
+                    <option value="3-column-features">📋 3-Column Features</option>
+                </select>
+                <button id="insertTemplateBtn" class="btn btn-secondary" style="margin-top: 8px;" disabled>✨ Insert Template</button>
+            </div>
 
-    <!-- Form -->
-    <div>
-        <label for="templateName">Template Name</label>
-        <input type="text" id="templateName" value="Figma Template">
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button id="downloadBtn" class="btn btn-primary" disabled>📥 Download HTML</button>
+                <button id="pushBtn" class="btn btn-success" disabled>🚀 Push to Mailchimp</button>
+            </div>
 
-        <label for="subject">Subject Line</label>
-        <input type="text" id="subject" value="Draft from Figma">
+            <!-- Mailchimp Fields (Hidden by default) -->
+            <div id="mailchimpFields" class="mailchimp-fields">
+                <div class="form-group">
+                    <label>Template Name</label>
+                    <input type="text" id="templateName" value="Figma Template" placeholder="My Email Template">
+                </div>
 
-        <label for="preheader">Preheader</label>
-        <input type="text" id="preheader" placeholder="Optional preview text">
+                <div class="form-group">
+                    <label>Subject Line</label>
+                    <input type="text" id="subject" value="Draft from Figma" placeholder="Your email subject">
+                </div>
 
-        <div class="checkbox-container">
-            <label>
-                <input type="checkbox" id="createCampaign"> Create draft campaign
-            </label>
-        </div>
+                <div class="form-group">
+                    <label>Preheader</label>
+                    <input type="text" id="preheader" placeholder="Optional preview text">
+                    <small>Appears after the subject line in most email clients</small>
+                </div>
 
-        <div id="campaignOptions" style="display: none;">
-            <label for="listId">Audience List ID</label>
-            <input type="text" id="listId" placeholder="e.g. a1b2c3d4...">
-            <small>Find this in your Mailchimp audience settings</small>
+                <div class="checkbox-container">
+                    <label>
+                        <input type="checkbox" id="createCampaign">
+                        Create draft campaign
+                    </label>
+                </div>
 
-            <label for="replyTo">Reply-To Email</label>
-            <input type="email" id="replyTo" placeholder="hello@yourdomain.com">
-            <small>Must be verified in your Mailchimp account</small>
-        </div>
+                <div id="campaignOptions" style="display: none;">
+                    <div class="form-group">
+                        <label>Audience List ID</label>
+                        <input type="text" id="listId" placeholder="e.g. a1b2c3d4...">
+                        <small>Find this in your Mailchimp audience settings</small>
+                    </div>
 
-        <button id="downloadBtn" class="download-btn" disabled>📥 Download HTML</button>
-        <button id="pushBtn" class="push-btn" disabled>🚀 Compile & Push to Mailchimp</button>
+                    <div class="form-group">
+                        <label>Reply-To Email</label>
+                        <input type="email" id="replyTo" placeholder="hello@yourdomain.com">
+                        <small>Must be verified in your Mailchimp account</small>
+                    </div>
+                </div>
 
-        <div id="progress" class="progress" style="display: none;"></div>
+                <div class="action-buttons" style="margin-top: 24px;">
+                    <button id="confirmPushBtn" class="btn btn-success">✅ Confirm & Push</button>
+                    <button id="cancelPushBtn" class="btn btn-secondary">Cancel</button>
+                </div>
+            </div>
 
-        <div id="helpText" class="help-text">
-            Select a Frame in Figma to get started
+            <!-- OAuth Status -->
+            <div id="oauthStatus" class="status-box status-disconnected">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span>⚠️</span>
+                    <strong>Not connected to Mailchimp</strong>
+                </div>
+                <button id="connectBtn" class="btn btn-primary" style="margin-top: 8px;">🔗 Connect Mailchimp</button>
+            </div>
+
+            <div id="progress" class="progress" style="display: none;"></div>
+
+            <div id="helpText" class="help-text">
+                Select a Frame in Figma or insert a template to get started
+            </div>
         </div>
     </div>
 
@@ -203,6 +362,11 @@
         const helpText = document.getElementById('helpText');
         const oauthStatus = document.getElementById('oauthStatus');
         const selectionStatus = document.getElementById('selectionStatus');
+        const templateSelect = document.getElementById('templateSelect');
+        const insertTemplateBtn = document.getElementById('insertTemplateBtn');
+        const mailchimpFields = document.getElementById('mailchimpFields');
+        const confirmPushBtn = document.getElementById('confirmPushBtn');
+        const cancelPushBtn = document.getElementById('cancelPushBtn');
 
         let isConnected = false;
         let hasValidSelection = false;
@@ -211,11 +375,12 @@
         function updateButtons() {
             downloadBtn.disabled = !hasValidSelection;
             pushBtn.disabled = !hasValidSelection || !isConnected;
+            insertTemplateBtn.disabled = !templateSelect.value;
 
             if (!hasValidSelection) {
-                helpText.textContent = "Select a Frame in Figma to get started";
+                helpText.textContent = "Select a Frame in Figma or insert a template to get started";
             } else if (hasValidSelection && !isConnected) {
-                helpText.textContent = "Connect Mailchimp to use 'Compile & Push' feature";
+                helpText.textContent = "Connect Mailchimp to use 'Push to Mailchimp' feature";
             } else {
                 helpText.textContent = "";
             }
@@ -247,8 +412,23 @@
             }, "*");
         });
 
-        // Push button
+        // Push button - Show Mailchimp fields
         pushBtn.addEventListener('click', function() {
+            if (!isConnected) return;
+
+            // Show Mailchimp fields with fade-in animation
+            mailchimpFields.classList.add('fade-in');
+            mailchimpFields.classList.add('show');
+            pushBtn.style.display = 'none';
+
+            // Scroll to make fields visible
+            setTimeout(() => {
+                mailchimpFields.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        });
+
+        // Confirm push button
+        confirmPushBtn.addEventListener('click', function() {
             const templateName = document.getElementById('templateName').value;
             const subject = document.getElementById('subject').value;
             const preheader = document.getElementById('preheader').value;
@@ -256,17 +436,64 @@
             const listId = document.getElementById('listId').value;
             const replyTo = document.getElementById('replyTo').value;
 
+            // Validate required fields
+            if (!templateName.trim()) {
+                alert('Please enter a template name');
+                return;
+            }
+            if (!subject.trim()) {
+                alert('Please enter a subject line');
+                return;
+            }
+
             parent.postMessage({
                 pluginMessage: {
                     type: "PUSH",
-                    templateName,
-                    subject,
-                    preheader,
+                    templateName: templateName.trim(),
+                    subject: subject.trim(),
+                    preheader: preheader.trim(),
                     createCampaign,
-                    listId,
-                    replyTo
+                    listId: listId.trim(),
+                    replyTo: replyTo.trim()
                 }
             }, "*");
+        });
+
+        // Cancel push button
+        cancelPushBtn.addEventListener('click', function() {
+            mailchimpFields.classList.remove('show');
+            pushBtn.style.display = 'inline-block';
+
+            // Clear form fields
+            document.getElementById('templateName').value = 'Figma Template';
+            document.getElementById('subject').value = 'Draft from Figma';
+            document.getElementById('preheader').value = '';
+            document.getElementById('createCampaign').checked = false;
+            document.getElementById('listId').value = '';
+            document.getElementById('replyTo').value = '';
+            campaignOptions.style.display = 'none';
+        });
+
+        // Template selection
+        templateSelect.addEventListener('change', function() {
+            updateButtons();
+        });
+
+        // Insert template button
+        insertTemplateBtn.addEventListener('click', function() {
+            const selectedTemplate = templateSelect.value;
+            if (!selectedTemplate) return;
+
+            parent.postMessage({
+                pluginMessage: {
+                    type: "INSERT_TEMPLATE",
+                    templateType: selectedTemplate
+                }
+            }, "*");
+
+            // Reset selection
+            templateSelect.value = '';
+            updateButtons();
         });
 
         // Listen for messages from plugin
@@ -281,6 +508,9 @@
 
             if (msg.type === "DONE") {
                 progressDiv.style.display = 'none';
+                // Reset Mailchimp fields after successful operation
+                mailchimpFields.classList.remove('show');
+                pushBtn.style.display = 'inline-block';
                 if (msg.result) {
                     alert('Successfully completed!');
                 }
