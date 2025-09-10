@@ -1,6 +1,22 @@
 // Email template definitions for FigMail plugin
 // These define the structure and content for premade email templates
 
+// Utility function for responsive sizing
+function responsiveSize(baseSize: number, mobileMultiplier: number = 0.8): { base: number; mobile: number } {
+  return {
+    base: baseSize,
+    mobile: Math.round(baseSize * mobileMultiplier)
+  };
+}
+
+// Utility function for responsive spacing
+function responsiveSpacing(baseSpacing: number): { desktop: number; mobile: number } {
+  return {
+    desktop: baseSpacing,
+    mobile: Math.max(10, Math.round(baseSpacing * 0.6))
+  };
+}
+
 export interface EmailTemplate {
   name: string;
   description: string;
@@ -37,10 +53,10 @@ export interface TemplateElement {
   children?: TemplateElement[];
 }
 
-// Newsletter Template
+// Newsletter Template - Responsive Design
 export const newsletterTemplate: EmailTemplate = {
   name: 'Newsletter Layout',
-  description: 'Classic newsletter with header, content sections, and footer',
+  description: 'Classic newsletter with header, content sections, and footer - fully responsive',
   width: 600,
   height: 800,
   sections: [
@@ -125,7 +141,7 @@ export const newsletterTemplate: EmailTemplate = {
           y: 65,
           width: 560,
           height: 50,
-          content: 'Scientists have made an incredible breakthrough that will change everything we know about...',
+          content: 'Scientists have made an incredible breakthrough that will change everything we know about technology and innovation. This discovery promises to revolutionize how we approach...',
           fontSize: 16,
           textAlign: 'left'
         },
@@ -270,10 +286,10 @@ export const promotionalTemplate: EmailTemplate = {
   ]
 };
 
-// 2-Column Basic Template
+// 2-Column Basic Template - Mobile Responsive
 export const twoColumnBasicTemplate: EmailTemplate = {
   name: '2-Column Basic',
-  description: 'Simple two-column layout with image and text',
+  description: 'Simple two-column layout with image and text - stacks beautifully on mobile',
   width: 600,
   height: 400,
   sections: [
@@ -289,8 +305,8 @@ export const twoColumnBasicTemplate: EmailTemplate = {
         {
           type: 'frame',
           name: 'Email/Column/Left',
-          x: 20,
-          y: 20,
+          x: responsiveSpacing(20).desktop,
+          y: responsiveSpacing(20).desktop,
           width: 270,
           height: 310,
           children: [
@@ -311,7 +327,7 @@ export const twoColumnBasicTemplate: EmailTemplate = {
               width: 270,
               height: 35,
               content: 'Amazing Product',
-              fontSize: 20,
+              fontSize: responsiveSize(20, 0.9).base,
               fontWeight: 'bold',
               textAlign: 'center'
             }
@@ -321,7 +337,7 @@ export const twoColumnBasicTemplate: EmailTemplate = {
           type: 'frame',
           name: 'Email/Column/Right',
           x: 310,
-          y: 20,
+          y: responsiveSpacing(20).desktop,
           width: 270,
           height: 310,
           children: [
@@ -331,16 +347,16 @@ export const twoColumnBasicTemplate: EmailTemplate = {
               x: 0,
               y: 0,
               width: 270,
-              height: 80,
-              content: 'This incredible product will transform the way you work. With innovative features and intuitive design...',
-              fontSize: 16,
+              height: 100,
+              content: 'This incredible product will transform the way you work. With innovative features and intuitive design, it adapts to your workflow seamlessly.',
+              fontSize: responsiveSize(16, 0.9).base,
               textAlign: 'left'
             },
             {
               type: 'frame',
               name: 'Email/Button/Buy Now',
               x: 60,
-              y: 100,
+              y: 120,
               width: 150,
               height: 45,
               backgroundColor: '#28A745',
@@ -354,7 +370,7 @@ export const twoColumnBasicTemplate: EmailTemplate = {
                   width: 150,
                   height: 45,
                   content: 'Buy Now',
-                  fontSize: 16,
+                  fontSize: responsiveSize(16, 0.9).base,
                   fontWeight: 'bold',
                   textAlign: 'center',
                   hyperlink: 'https://example.com/buy'

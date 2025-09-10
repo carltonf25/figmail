@@ -548,6 +548,253 @@ function hexToRgb(hex: string): { r: number, g: number, b: number } {
   } : { r: 1, g: 1, b: 1 };
 }
 
+// Enhanced styling extraction for email compatibility
+interface EmailStyles {
+  backgroundColor?: string;
+  backgroundImage?: string;
+  border?: string;
+  borderRadius?: string;
+  boxShadow?: string;
+  color?: string;
+  fontFamily?: string;
+  fontSize?: string;
+  fontWeight?: string;
+  textDecoration?: string;
+  textAlign?: string;
+  textTransform?: string;
+  letterSpacing?: string;
+  padding?: string;
+  margin?: string;
+  width?: string;
+  height?: string;
+  display?: string;
+}
+
+// Extract comprehensive styling from Figma node for email compatibility
+function extractEmailStyles(node: SceneNode): EmailStyles {
+  const styles: EmailStyles = {};
+
+  // Handle different node types
+  if (node.type === 'FRAME' || node.type === 'GROUP' || node.type === 'RECTANGLE') {
+    const layoutNode = node as LayoutMixin & GeometryMixin;
+
+    // Background and fills
+    if ('fills' in layoutNode && layoutNode.fills) {
+      const backgroundStyle = processFills(layoutNode.fills as any);
+      Object.assign(styles, backgroundStyle);
+    }
+
+    // Effects (shadows, blurs, etc.)
+    if ('effects' in layoutNode && layoutNode.effects) {
+      const effectStyle = processEffects(layoutNode.effects as any);
+      Object.assign(styles, effectStyle);
+    }
+
+    // Strokes/borders
+    if ('strokes' in layoutNode && layoutNode.strokes) {
+      const strokeStyle = processStrokes(layoutNode.strokes as any, layoutNode.strokeWeight);
+      Object.assign(styles, strokeStyle);
+    }
+
+    // Corner radius
+    if ('cornerRadius' in layoutNode && layoutNode.cornerRadius) {
+      styles.borderRadius = `${layoutNode.cornerRadius}px`;
+    }
+
+    // Size
+    if (layoutNode.width) styles.width = `${layoutNode.width}px`;
+    if (layoutNode.height) styles.height = `${layoutNode.height}px`;
+
+    // Padding (from AutoLayout if available)
+    if ('paddingLeft' in layoutNode) {
+      const paddingNode = layoutNode as any;
+      const padding = [
+        paddingNode.paddingTop || 0,
+        paddingNode.paddingRight || 0,
+        paddingNode.paddingBottom || 0,
+        paddingNode.paddingLeft || 0
+      ].map(p => `${p}px`).join(' ');
+      if (padding !== '0px 0px 0px 0px') {
+        styles.padding = padding;
+      }
+    }
+  }
+
+  return styles;
+}
+
+// Process Figma fills into email-compatible CSS
+function processFills(fills: any[]): Partial<EmailStyles> {
+  const styles: Partial<EmailStyles> = {};
+
+  if (!fills || fills.length === 0) return styles;
+
+  // Process the first visible fill (email clients typically only support one background)
+  const visibleFill = fills.find(fill => fill.visible !== false);
+
+  if (!visibleFill) return styles;
+
+  switch (visibleFill.type) {
+    case 'SOLID':
+      styles.backgroundColor = rgbToHex(visibleFill.color);
+      break;
+
+    case 'GRADIENT_LINEAR':
+    case 'GRADIENT_RADIAL':
+    case 'GRADIENT_ANGULAR':
+    case 'GRADIENT_DIAMOND':
+      // Convert gradient to CSS (simplified for email compatibility)
+      const gradientCss = gradientToCss(visibleFill);
+      if (gradientCss) {
+        styles.backgroundImage = gradientCss;
+        // Fallback to solid color for email clients that don't support gradients
+        if (visibleFill.type === 'GRADIENT_LINEAR' && visibleFill.gradientStops?.[0]) {
+          styles.backgroundColor = rgbToHex(visibleFill.gradientStops[0].color);
+        }
+      }
+      break;
+
+    case 'IMAGE':
+      // Image fills would be handled separately in the image processing
+      break;
+  }
+
+  return styles;
+}
+
+// Process Figma effects into email-compatible CSS
+function processEffects(effects: any[]): Partial<EmailStyles> {
+  const styles: Partial<EmailStyles> = {};
+
+  if (!effects || effects.length === 0) return styles;
+
+  // Process visible effects
+  const visibleEffects = effects.filter(effect => effect.visible !== false);
+
+  for (const effect of visibleEffects) {
+    switch (effect.type) {
+      case 'DROP_SHADOW':
+      case 'INNER_SHADOW':
+        if (effect.type === 'DROP_SHADOW') {
+          const shadow = `${effect.offset?.x || 0}px ${effect.offset?.y || 0}px ${effect.radius || 0}px ${rgbToHex(effect.color)}`;
+          styles.boxShadow = styles.boxShadow ? `${styles.boxShadow}, ${shadow}` : shadow;
+        }
+        break;
+
+      case 'LAYER_BLUR':
+      case 'BACKGROUND_BLUR':
+        // Email clients don't support blur effects well, skip or provide fallback
+        break;
+    }
+  }
+
+  return styles;
+}
+
+// Process Figma strokes into email-compatible CSS
+function processStrokes(strokes: any[], strokeWeight?: number): Partial<EmailStyles> {
+  const styles: Partial<EmailStyles> = {};
+
+  if (!strokes || strokes.length === 0) return styles;
+
+  const visibleStroke = strokes.find(stroke => stroke.visible !== false);
+  if (!visibleStroke) return styles;
+
+  const weight = strokeWeight || 1;
+  const color = rgbToHex(visibleStroke.color);
+
+  styles.border = `${weight}px solid ${color}`;
+
+  return styles;
+}
+
+// Convert Figma gradient to CSS
+function gradientToCss(gradient: any): string | null {
+  if (!gradient.gradientStops || gradient.gradientStops.length === 0) return null;
+
+  const stops = gradient.gradientStops.map((stop: any) => {
+    const color = rgbToHex(stop.color);
+    const position = Math.round(stop.position * 100);
+    return `${color} ${position}%`;
+  });
+
+  switch (gradient.type) {
+    case 'GRADIENT_LINEAR':
+      // Calculate angle from Figma's transform matrix
+      const angle = calculateGradientAngle(gradient);
+      return `linear-gradient(${angle}deg, ${stops.join(', ')})`;
+
+    case 'GRADIENT_RADIAL':
+      return `radial-gradient(circle, ${stops.join(', ')})`;
+
+    default:
+      // Default to linear gradient
+      return `linear-gradient(180deg, ${stops.join(', ')})`;
+  }
+}
+
+// Calculate gradient angle from Figma's transform matrix
+function calculateGradientAngle(gradient: any): number {
+  if (!gradient.gradientTransform) return 180; // Default to top-to-bottom
+
+  // Figma's gradient transform is a 3x3 matrix
+  // We need to extract the rotation angle
+  const matrix = gradient.gradientTransform;
+
+  // For a standard linear gradient, the angle can be calculated from the matrix
+  // This is a simplified calculation - in practice you might need more complex math
+  const angle = Math.atan2(matrix[1], matrix[0]) * (180 / Math.PI);
+
+  return Math.round(angle);
+}
+
+// Convert RGB color to hex
+function rgbToHex(color: { r: number, g: number, b: number }): string {
+  const r = Math.round(color.r * 255);
+  const g = Math.round(color.g * 255);
+  const b = Math.round(color.b * 255);
+
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+}
+
+// Convert styles object to inline CSS string
+function stylesToInlineCss(styles: EmailStyles): string {
+  const cssParts: string[] = [];
+
+  // Only include email-safe CSS properties
+  const emailSafeProps: (keyof EmailStyles)[] = [
+    'backgroundColor',
+    'backgroundImage',
+    'border',
+    'borderRadius',
+    'boxShadow',
+    'color',
+    'fontFamily',
+    'fontSize',
+    'fontWeight',
+    'textDecoration',
+    'textAlign',
+    'textTransform',
+    'letterSpacing',
+    'lineHeight',
+    'padding',
+    'margin',
+    'width',
+    'height',
+    'display'
+  ];
+
+  for (const prop of emailSafeProps) {
+    if (styles[prop]) {
+      // Convert camelCase to kebab-case
+      const cssProp = prop.replace(/[A-Z]/g, match => `-${match.toLowerCase()}`);
+      cssParts.push(`${cssProp}:${styles[prop]}`);
+    }
+  }
+
+  return cssParts.join(';');
+}
+
 // Parse column width from frame name (e.g., "Email/Column/50%" or "Email/Column/Left")
 function parseColumnWidth(columnName: string, sectionWidth: number): number | undefined {
   // Look for percentage in the name (e.g., "Email/Column/50%")
@@ -578,29 +825,91 @@ function parseColumnWidth(columnName: string, sectionWidth: number): number | un
 
 async function toBlock(node: SceneNode, images: Record<string, string>): Promise<Block | null> {
   const nm = (node as any).name ?? "";
+
+  // Extract comprehensive styling for all node types
+  const nodeStyles = extractEmailStyles(node);
+
   if (node.type === "TEXT") {
     console.log("Processing TEXT node:", node.id, "name:", (node as any).name);
-    console.log("getStyledTextSegments function exists:", typeof (node as TextNode).getStyledTextSegments);
 
     let html = "";
+    let combinedStyles: EmailStyles = { ...nodeStyles };
+
     try {
       console.log("About to call getStyledTextSegments...");
-      const segments = await (node as TextNode).getStyledTextSegments(["fontName", "fontSize", "fills", "textDecoration", "fontWeight"]);
+      const segments = await (node as TextNode).getStyledTextSegments([
+        "fontName", "fontSize", "fills", "textDecoration", "fontWeight",
+        "letterSpacing", "lineHeight", "textCase"
+      ]);
       console.log("Got segments:", segments, "type:", typeof segments, "isArray:", Array.isArray(segments));
 
-      console.log("About to call map with segToHtml:", typeof segToHtml);
-      console.log("segments.map exists:", typeof segments.map);
       html = segments.map((seg: any) => {
         console.log("Processing segment:", seg);
         let segmentText = seg.characters.replace(/\n/g, "<br/>");
+
+        // Build segment-specific styles
+        let segmentStyles: EmailStyles = {};
+
+        // Font properties
+        if (seg.fontName) {
+          segmentStyles.fontFamily = seg.fontName.family;
+          if (seg.fontName.style && seg.fontName.style !== 'Regular') {
+            segmentStyles.fontWeight = seg.fontName.style.includes('Bold') ? '700' : '400';
+          }
+        }
+
+        if (seg.fontSize) {
+          segmentStyles.fontSize = `${seg.fontSize}px`;
+        }
+
+        if (seg.fontWeight) {
+          segmentStyles.fontWeight = seg.fontWeight.toString();
+        }
+
+        // Text styling
+        if (seg.textDecoration === 'UNDERLINE') {
+          segmentStyles.textDecoration = 'underline';
+        } else if (seg.textDecoration === 'STRIKETHROUGH') {
+          segmentStyles.textDecoration = 'line-through';
+        }
+
+        if (seg.textCase === 'UPPER') {
+          segmentStyles.textTransform = 'uppercase';
+        } else if (seg.textCase === 'LOWER') {
+          segmentStyles.textTransform = 'lowercase';
+        }
+
+        // Text color
+        if (seg.fills && seg.fills.length > 0) {
+          const textFill = seg.fills.find((fill: any) => fill.type === 'SOLID' && fill.visible !== false);
+          if (textFill) {
+            segmentStyles.color = rgbToHex(textFill.color);
+          }
+        }
+
+        // Letter spacing and line height
+        if (seg.letterSpacing) {
+          segmentStyles.letterSpacing = `${seg.letterSpacing}px`;
+        }
+
+        if (seg.lineHeight && typeof seg.lineHeight === 'object' && seg.lineHeight.unit === 'PIXELS') {
+          segmentStyles.lineHeight = `${seg.lineHeight.value}px`;
+        }
 
         // Check for hyperlinks in text segments
         if (seg.hyperlink && seg.hyperlink.type === "URL") {
           segmentText = `<a href="${seg.hyperlink.value}" style="color: inherit; text-decoration: underline;">${segmentText}</a>`;
         }
 
+        // Apply segment styles as inline CSS
+        const segmentCss = stylesToInlineCss(segmentStyles);
+        if (segmentCss) {
+          return `<span style="${segmentCss}">${segmentText}</span>`;
+        }
+
         return segmentText;
       }).join("");
+
       console.log("Converted to HTML:", html);
     } catch (segError) {
       console.error("Error in segments processing:", segError);
@@ -620,6 +929,12 @@ async function toBlock(node: SceneNode, images: Record<string, string>): Promise
 
     // Generate mc:edit properties
     const { editRegionName, editable } = generateEditRegionName((node as any).name || "");
+
+    // Get text alignment from the node
+    const textNode = node as TextNode;
+    if (textNode.textAlignHorizontal) {
+      combinedStyles.textAlign = textNode.textAlignHorizontal.toLowerCase();
+    }
 
     return {
       id: node.id,
@@ -755,6 +1070,73 @@ async function toBlock(node: SceneNode, images: Record<string, string>): Promise
       type: "spacer",
       height: Math.round((node as LayoutMixin).height)
     };
+  }
+
+  // Handle general FRAME and RECTANGLE nodes with enhanced styling
+  if (node.type === "FRAME" || node.type === "GROUP") {
+    const { editRegionName, editable } = generateEditRegionName((node as any).name || "");
+
+    // Get comprehensive styling
+    const styles = extractEmailStyles(node);
+    const inlineCss = stylesToInlineCss(styles);
+
+    return {
+      id: node.id,
+      name: (node as any).name,
+      type: "container",
+      backgroundColor: styles.backgroundColor,
+      width: Math.round((node as any).width),
+      height: Math.round((node as any).height),
+      spacing: paddingFrom(node as any),
+      // Add enhanced styling properties
+      borderRadius: styles.borderRadius,
+      boxShadow: styles.boxShadow,
+      border: styles.border ? styles.border : undefined,
+      inlineCss: inlineCss || undefined
+    };
+  }
+
+  if (node.type === "RECTANGLE") {
+    // Get comprehensive styling
+    const styles = extractEmailStyles(node);
+    const inlineCss = stylesToInlineCss(styles);
+
+    if (/Email\/Image/i.test(nm)) {
+      const bytes = await (node as GeometryMixin).exportAsync({ format: "PNG", constraint: { type: "SCALE", value: 2 } });
+      const key = node.id;
+      images[key] = `data:image/png;base64,${figma.base64Encode(bytes)}`;
+      return {
+        id: node.id,
+        name: (node as any).name,
+        type: "image",
+        key,
+        alt: (node as any).name ?? "",
+        width: Math.round(((node as LayoutMixin).width)),
+        align: "center",
+        border: styles.border ? { width: 1, color: styles.border.split(' ')[2] || "#000000" } : {},
+        spacing: paddingFrom(node as any),
+        // Add enhanced styling properties
+        borderRadius: styles.borderRadius,
+        boxShadow: styles.boxShadow,
+        inlineCss: inlineCss || undefined
+      };
+    } else {
+      // Rectangle with styling - treat as styled container
+      return {
+        id: node.id,
+        name: (node as any).name,
+        type: "container",
+        backgroundColor: styles.backgroundColor,
+        width: Math.round((node as any).width),
+        height: Math.round((node as any).height),
+        spacing: paddingFrom(node as any),
+        // Add enhanced styling properties
+        borderRadius: styles.borderRadius,
+        boxShadow: styles.boxShadow,
+        border: styles.border ? styles.border : undefined,
+        inlineCss: inlineCss || undefined
+      };
+    }
   }
 
   console.log("Skipping unsupported node type:", node.type, "name:", nm);

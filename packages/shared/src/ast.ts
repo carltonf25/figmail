@@ -56,6 +56,10 @@ const ContainerBlock = z.object({
   width: PositiveNumber.optional(),
   height: PositiveNumber.optional(),
   spacing: Spacing,
+  borderRadius: z.string().optional(), // Enhanced styling support
+  boxShadow: z.string().optional(), // Enhanced styling support
+  border: z.string().optional(), // Enhanced styling support
+  inlineCss: z.string().optional(), // Enhanced styling support
 });
 
 const ImageBlock = z.object({
@@ -68,6 +72,9 @@ const ImageBlock = z.object({
   spacing: Spacing,
   border: Border,
   href: z.string().url().optional(), // Link URL for clickable images
+  borderRadius: z.string().optional(), // Enhanced styling support
+  boxShadow: z.string().optional(), // Enhanced styling support
+  inlineCss: z.string().optional(), // Enhanced styling support
 });
 
 const ButtonBlock = z.object({
@@ -83,6 +90,9 @@ const ButtonBlock = z.object({
   border: Border,
   editable: z.boolean().default(true), // Whether button text should be editable
   editRegionName: z.string().optional(), // Descriptive name for the editable region
+  borderRadius: z.string().optional(), // Enhanced styling support
+  boxShadow: z.string().optional(), // Enhanced styling support
+  inlineCss: z.string().optional(), // Enhanced styling support
 });
 
 const DividerBlock = z.object({

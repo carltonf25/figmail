@@ -11,6 +11,7 @@
             padding: 16px;
             background: white;
             width: 360px;
+            box-sizing: border-box;
         }
 
         body {
@@ -25,6 +26,72 @@
         .container {
             max-width: 380px;
             margin: 0 auto;
+        }
+
+        /* Responsive breakpoints for different Figma panel sizes */
+        @media (max-width: 320px) {
+            body {
+                font-size: 11px;
+                padding: 12px;
+            }
+
+            .container {
+                max-width: 280px;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            h3 {
+                font-size: 16px;
+            }
+
+            .btn {
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+        }
+
+        @media (min-width: 321px) and (max-width: 400px) {
+            .container {
+                max-width: 360px;
+            }
+        }
+
+        @media (min-width: 401px) and (max-width: 500px) {
+            .container {
+                max-width: 440px;
+            }
+
+            body {
+                font-size: 13px;
+                padding: 20px;
+            }
+        }
+
+        @media (min-width: 501px) {
+            .container {
+                max-width: 480px;
+            }
+
+            body {
+                font-size: 14px;
+                padding: 24px;
+            }
+
+            .card {
+                padding: 28px;
+            }
+
+            h3 {
+                font-size: 20px;
+            }
+
+            .btn {
+                padding: 14px 18px;
+                font-size: 14px;
+            }
         }
 
         .card {
