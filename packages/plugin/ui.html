@@ -10,20 +10,54 @@
             margin: 0;
             padding: 16px;
             background: white;
+            width: 360px;
         }
-        
+
         h3 {
             margin: 0 0 16px 0;
             font-size: 14px;
             font-weight: 600;
         }
-        
+
+        p {
+            margin: 0 0 16px 0;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .status-box {
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            font-size: 12px;
+        }
+
+        .status-connected {
+            background: #e8f5e8;
+            border: 1px solid #c8e6c9;
+        }
+
+        .status-disconnected {
+            background: #fff3e0;
+            border: 1px solid #ffcc80;
+        }
+
+        .status-selected {
+            background: #e8f5e8;
+            border: 1px solid #c8e6c9;
+        }
+
+        .status-unselected {
+            background: #fff3e0;
+            border: 1px solid #ffcc80;
+        }
+
         label {
             display: block;
             margin-bottom: 4px;
             font-weight: 500;
         }
-        
+
         input[type="text"], input[type="email"] {
             width: 100%;
             padding: 8px;
@@ -33,11 +67,11 @@
             margin-bottom: 12px;
             box-sizing: border-box;
         }
-        
+
         input[type="checkbox"] {
             margin-right: 8px;
         }
-        
+
         button {
             background: #007AFF;
             color: white;
@@ -49,86 +83,170 @@
             width: 100%;
             margin-bottom: 8px;
         }
-        
+
         button:hover {
             background: #0056b3;
         }
-        
+
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .download-btn {
+            background: #17a2b8;
+        }
+
+        .download-btn:hover {
+            background: #138496;
+        }
+
+        .push-btn {
+            background: #28a745;
+        }
+
+        .push-btn:hover {
+            background: #1e7e34;
+        }
+
         .progress {
             color: #666;
             font-style: italic;
             margin-top: 12px;
+            padding: 8px;
+            background: #e3f2fd;
+            border-radius: 4px;
+            border: 1px solid #2196f3;
         }
-        
+
         .checkbox-container {
             margin: 12px 0;
         }
-        
+
         small {
             color: #666;
             display: block;
             margin-top: 4px;
         }
+
+        .help-text {
+            font-size: 11px;
+            color: #666;
+            margin-top: 8px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <h3>Figma → Mailchimp</h3>
-    
-    <button id="connectBtn">Connect Mailchimp</button>
-    
+    <h3>🎨 FigChimp</h3>
+    <p>Convert Figma designs to Mailchimp email templates</p>
+
+    <!-- OAuth Status -->
+    <div id="oauthStatus" class="status-box status-disconnected">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span>⚠️</span>
+            <strong>Not connected to Mailchimp</strong>
+        </div>
+        <button id="connectBtn">Connect Mailchimp</button>
+    </div>
+
+    <!-- Selection Status -->
+    <div id="selectionStatus" class="status-box status-unselected">
+        <span>⚠️ Selection: No selection</span>
+    </div>
+
+    <!-- Form -->
     <div>
-        <label for="templateName">Template name</label>
+        <label for="templateName">Template Name</label>
         <input type="text" id="templateName" value="Figma Template">
-    </div>
-    
-    <div>
-        <label for="subject">Subject</label>
+
+        <label for="subject">Subject Line</label>
         <input type="text" id="subject" value="Draft from Figma">
-    </div>
-    
-    <div>
+
         <label for="preheader">Preheader</label>
         <input type="text" id="preheader" placeholder="Optional preview text">
+
+        <div class="checkbox-container">
+            <label>
+                <input type="checkbox" id="createCampaign"> Create draft campaign
+            </label>
+        </div>
+
+        <div id="campaignOptions" style="display: none;">
+            <label for="listId">Audience List ID</label>
+            <input type="text" id="listId" placeholder="e.g. a1b2c3d4...">
+            <small>Find this in your Mailchimp audience settings</small>
+
+            <label for="replyTo">Reply-To Email</label>
+            <input type="email" id="replyTo" placeholder="hello@yourdomain.com">
+            <small>Must be verified in your Mailchimp account</small>
+        </div>
+
+        <button id="downloadBtn" class="download-btn" disabled>📥 Download HTML</button>
+        <button id="pushBtn" class="push-btn" disabled>🚀 Compile & Push to Mailchimp</button>
+
+        <div id="progress" class="progress" style="display: none;"></div>
+
+        <div id="helpText" class="help-text">
+            Select a Frame in Figma to get started
+        </div>
     </div>
-    
-    <div class="checkbox-container">
-        <label>
-            <input type="checkbox" id="createCampaign"> Create draft campaign
-        </label>
-    </div>
-    
-    <div id="campaignOptions" style="display: none;">
-        <label for="listId">Audience List ID</label>
-        <input type="text" id="listId" placeholder="e.g. a1b2c3d4...">
-        <small>Requires Mailchimp List ID</small>
-        
-        <label for="replyTo">Reply-To Email</label>
-        <input type="email" id="replyTo" placeholder="e.g. hello@yourdomain.com">
-        <small>Must be a verified email in your Mailchimp account</small>
-    </div>
-    
-    <button id="pushBtn">Compile & Push</button>
-    
-    <div id="progress" class="progress" style="display: none;"></div>
 
     <script>
         // Get elements
         const connectBtn = document.getElementById('connectBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
         const pushBtn = document.getElementById('pushBtn');
         const createCampaignCheckbox = document.getElementById('createCampaign');
         const campaignOptions = document.getElementById('campaignOptions');
         const progressDiv = document.getElementById('progress');
-        
+        const helpText = document.getElementById('helpText');
+        const oauthStatus = document.getElementById('oauthStatus');
+        const selectionStatus = document.getElementById('selectionStatus');
+
+        let isConnected = false;
+        let hasValidSelection = false;
+
+        // Update button states
+        function updateButtons() {
+            downloadBtn.disabled = !hasValidSelection;
+            pushBtn.disabled = !hasValidSelection || !isConnected;
+
+            if (!hasValidSelection) {
+                helpText.textContent = "Select a Frame in Figma to get started";
+            } else if (hasValidSelection && !isConnected) {
+                helpText.textContent = "Connect Mailchimp to use 'Compile & Push' feature";
+            } else {
+                helpText.textContent = "";
+            }
+        }
+
         // Show/hide campaign options
         createCampaignCheckbox.addEventListener('change', function() {
             campaignOptions.style.display = this.checked ? 'block' : 'none';
         });
-        
+
         // Connect button
         connectBtn.addEventListener('click', function() {
             parent.postMessage({ pluginMessage: { type: "CONNECT" } }, "*");
         });
-        
+
+        // Download button
+        downloadBtn.addEventListener('click', function() {
+            const templateName = document.getElementById('templateName').value;
+            const subject = document.getElementById('subject').value;
+            const preheader = document.getElementById('preheader').value;
+
+            parent.postMessage({
+                pluginMessage: {
+                    type: "DOWNLOAD_HTML",
+                    templateName,
+                    subject,
+                    preheader
+                }
+            }, "*");
+        });
+
         // Push button
         pushBtn.addEventListener('click', function() {
             const templateName = document.getElementById('templateName').value;
@@ -137,40 +255,76 @@
             const createCampaign = document.getElementById('createCampaign').checked;
             const listId = document.getElementById('listId').value;
             const replyTo = document.getElementById('replyTo').value;
-            
-            parent.postMessage({ 
-                pluginMessage: { 
-                    type: "PUSH", 
+
+            parent.postMessage({
+                pluginMessage: {
+                    type: "PUSH",
                     templateName,
-                    subject, 
-                    preheader, 
-                    createCampaign, 
+                    subject,
+                    preheader,
+                    createCampaign,
                     listId,
                     replyTo
-                } 
+                }
             }, "*");
         });
-        
+
         // Listen for messages from plugin
         window.onmessage = function(event) {
             const msg = event.data.pluginMessage;
             if (!msg) return;
-            
+
             if (msg.type === "PROGRESS") {
                 progressDiv.textContent = "⏳ " + msg.step;
                 progressDiv.style.display = 'block';
             }
-            
+
             if (msg.type === "DONE") {
                 progressDiv.style.display = 'none';
-                alert('Successfully pushed to Mailchimp!');
+                if (msg.result) {
+                    alert('Successfully completed!');
+                }
             }
-            
+
             if (msg.type === "ERROR") {
                 progressDiv.style.display = 'none';
                 alert('Error: ' + msg.message);
             }
+
+            if (msg.type === "SELECTION_UPDATE") {
+                hasValidSelection = msg.hasValidFrame;
+                selectionStatus.textContent = msg.message;
+                selectionStatus.className = hasValidSelection ?
+                    "status-box status-selected" :
+                    "status-box status-unselected";
+                updateButtons();
+            }
+
+            if (msg.type === "OAUTH_REQUIRED") {
+                // Show OAuth instructions
+                alert("Please complete Mailchimp authorization in the opened browser window, then return to Figma.");
+                if (msg.url) {
+                    // In a real implementation, you'd open this URL
+                    console.log("OAuth URL:", msg.url);
+                }
+            }
+
+            if (msg.type === "DOWNLOAD_READY") {
+                // Handle file download from HTML content
+                const blob = new Blob([msg.htmlContent], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = msg.filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
         };
+
+        // Initialize
+        updateButtons();
     </script>
 </body>
 </html>

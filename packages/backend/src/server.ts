@@ -21,8 +21,36 @@ app.use(session({
 }));
 
 app.use(cors({
-  origin: ["http://localhost:3000", "https://www.figma.com"], // Add your domains
-  credentials: true
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin or null origin (like mobile apps, curl requests, iframes)
+    if (!origin || origin === 'null') return callback(null, true);
+
+    const allowedOrigins = [
+      "http://localhost:3000",
+      "https://www.figma.com",
+      "https://figma.com",
+      /^https:\/\/.*\.figma\.com$/
+    ];
+
+    // Check if origin matches any allowed pattern
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') {
+        return allowed === origin;
+      } else if (allowed instanceof RegExp) {
+        return allowed.test(origin);
+      }
+      return false;
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 app.use(json({ limit: "25mb" }));
 

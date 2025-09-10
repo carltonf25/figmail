@@ -2,7 +2,7 @@ import type { EmailAst, Section, Column, Block } from "@figmc/shared";
 
 figma.showUI(__html__, { width: 380, height: 580 });
 
-const BACKEND = (figma.root.getPluginData("backendUrl") || "http://localhost:4000").toString().trim();
+const BACKEND = "http://localhost:4000";
 
 // Generate editable region name from Figma layer name
 function generateEditRegionName(nodeName: string): { editRegionName?: string; editable: boolean } {
@@ -124,12 +124,95 @@ The authorization page should open automatically.
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Server error: ${response.status} ${response.statusText}\n${errorText}`);
+        try {
+          const errorText = await response.text();
+          throw new Error(`Server error: ${response.status} ${response.statusText}\n${errorText || 'No error details'}`);
+        } catch (textError) {
+          console.error("Failed to read error response:", textError);
+          throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
       }
 
-      const result = await response.json();
+      // Try to parse as JSON, fallback to text if it fails
+      let result;
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        console.log("JSON parsing failed, trying text response:", jsonError);
+        try {
+          // If JSON parsing fails, the response might be HTML/text (like error pages)
+          const textContent = await response.text();
+          console.log("Got text content:", textContent?.substring(0, 100));
+          if (response.ok) {
+            // If response is OK but not JSON, treat as success
+            result = { success: true, message: "Operation completed successfully", content: textContent };
+          } else {
+            // If response is not OK and not JSON, it's likely an error
+            const errorMsg = `Server returned non-JSON response: ${textContent || 'No content'}`;
+            console.error("Response error:", errorMsg);
+            throw new Error(errorMsg);
+          }
+        } catch (textError) {
+          console.error("Failed to read response as text:", textError);
+          throw new Error("Failed to read server response");
+        }
+      }
       figma.ui.postMessage({ type: "DONE", result });
+    }
+
+    if (msg.type === "DOWNLOAD_HTML") {
+      const selection = figma.currentPage.selection[0];
+      if (!selection) {
+        figma.ui.postMessage({ type: "ERROR", message: "Please select a Frame in Figma first. Click on the email design frame you want to export." });
+        return;
+      }
+      if (selection.type !== "FRAME") {
+        figma.ui.postMessage({ type: "ERROR", message: "Please select a Frame (not " + selection.type.toLowerCase() + "). Click on the main email design frame you want to export." });
+        return;
+      }
+      figma.ui.postMessage({ type: "PROGRESS", step: "Analyzing frame..." });
+      console.log("Starting buildAstAndImages for download:", selection.name);
+      const { ast, images } = await buildAstAndImages(selection);
+      console.log("buildAstAndImages completed for download, AST:", ast);
+
+      figma.ui.postMessage({ type: "PROGRESS", step: "Compiling HTML..." });
+      const response = await fetch(`${BACKEND}/compile-and-download`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ast,
+          images,
+          templateName: msg.templateName,
+          subject: msg.subject,
+          preheader: msg.preheader
+        })
+      });
+
+      if (!response.ok) {
+        try {
+          const errorText = await response.text();
+          throw new Error(`Server error: ${response.status} ${response.statusText}\n${errorText || 'No error details'}`);
+        } catch (textError) {
+          console.error("Failed to read error response:", textError);
+          throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
+      }
+
+      // Get the HTML content as text instead of blob
+      console.log("Response received, getting text content...");
+      const htmlContent = await response.text();
+      console.log("HTML content received, length:", htmlContent.length);
+
+      // Send the HTML content directly to the UI for download
+      console.log("Sending download ready message to UI");
+      figma.ui.postMessage({
+        type: "DOWNLOAD_READY",
+        htmlContent: htmlContent,
+        filename: msg.templateName ? `${msg.templateName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}.html` : "figma-template.html"
+      });
+
+      figma.ui.postMessage({ type: "DONE" });
+      console.log("Download HTML completed successfully");
     }
   } catch (e) {
     console.error("Plugin error:", e);
@@ -149,7 +232,7 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
 
   const images: Record<string, string> = {};
 
-  const sectionNodes = frame.children.filter((n): n is FrameNode => n.type === "FRAME");
+  const sectionNodes = frame.children.filter((n): n is FrameNode => n.type === "FRAME").reverse();
 
   // If no child frames found, treat the main frame as a single section
   if (sectionNodes.length === 0) {
@@ -173,8 +256,8 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
       blocks: []
     };
 
-    // Process all children of the main frame as blocks
-    for (const child of frame.children) {
+    // Process all children of the main frame as blocks (reverse order for correct visual stacking)
+    for (const child of frame.children.slice().reverse()) {
       const block = await toBlock(child as SceneNode, images);
       if (block) col.blocks.push(block);
     }
@@ -194,28 +277,107 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
         columns: []
       };
 
-      // Create a single column for this section
-      const col: Column = {
-        id: sectionNode.id + "-col",
-        name: "Column",
-        type: "column",
-        widthPercent: undefined,
-        spacing: paddingFrom(sectionNode as any),
-        blocks: []
-      };
+      // Check if this section contains column frames (multi-column layout)
+      const columnFrames = sectionNode.children.filter((n): n is FrameNode => n.type === "FRAME" && n.name.startsWith("Email/Column"));
+      const nonColumnChildren = sectionNode.children.filter((n) => !(n.type === "FRAME" && n.name.startsWith("Email/Column")));
 
-      // Process all children of this section as blocks
-      for (const child of sectionNode.children) {
-        const block = await toBlock(child as SceneNode, images);
-        if (block) col.blocks.push(block);
+      if (columnFrames.length > 0) {
+        // Multi-column layout: process each column frame
+        const columnsWithWidths: Array<{ frame: FrameNode; widthPercent?: number }> = [];
+
+        // First pass: parse widths from frame names
+        for (const columnFrame of columnFrames.slice().reverse()) {
+          const widthPercent = parseColumnWidth(columnFrame.name, sectionNode.width);
+          columnsWithWidths.push({ frame: columnFrame, widthPercent });
+        }
+
+        // Second pass: assign widths to columns without explicit widths
+        const totalExplicitWidth = columnsWithWidths.reduce((sum, col) => sum + (col.widthPercent || 0), 0);
+        const remainingColumns = columnsWithWidths.filter(col => !col.widthPercent);
+        const remainingWidth = 100 - totalExplicitWidth;
+        const evenWidth = remainingColumns.length > 0 ? Math.floor(remainingWidth / remainingColumns.length) : 0;
+
+        // Assign even widths to remaining columns
+        remainingColumns.forEach((col, index) => {
+          col.widthPercent = evenWidth;
+          // Add any remainder to the last column
+          if (index === remainingColumns.length - 1) {
+            col.widthPercent = remainingWidth - (evenWidth * (remainingColumns.length - 1));
+          }
+        });
+
+        // Process each column
+        for (const { frame: columnFrame, widthPercent } of columnsWithWidths) {
+          const col: Column = {
+            id: columnFrame.id,
+            name: columnFrame.name || "Column",
+            type: "column",
+            widthPercent: widthPercent,
+            spacing: paddingFrom(columnFrame),
+            blocks: []
+          };
+
+          // Process all children of this column as blocks (reverse order for correct visual stacking)
+          for (const child of columnFrame.children.slice().reverse()) {
+            const block = await toBlock(child as SceneNode, images);
+            if (block) col.blocks.push(block);
+          }
+
+          section.columns.push(col);
+        }
+      } else {
+        // Single column layout: process all children as blocks in one column
+        const col: Column = {
+          id: sectionNode.id + "-col",
+          name: "Column",
+          type: "column",
+          widthPercent: undefined,
+          spacing: paddingFrom(sectionNode as any),
+          blocks: []
+        };
+
+        // Process all children of this section as blocks (reverse order for correct visual stacking)
+        for (const child of sectionNode.children.slice().reverse()) {
+          const block = await toBlock(child as SceneNode, images);
+          if (block) col.blocks.push(block);
+        }
+
+        section.columns.push(col);
       }
 
-      section.columns.push(col);
       ast.sections.push(section);
     }
   }
 
   return { ast, images };
+}
+
+// Parse column width from frame name (e.g., "Email/Column/50%" or "Email/Column/Left")
+function parseColumnWidth(columnName: string, sectionWidth: number): number | undefined {
+  // Look for percentage in the name (e.g., "Email/Column/50%")
+  const percentMatch = columnName.match(/(\d+)%/);
+  if (percentMatch) {
+    const percent = parseInt(percentMatch[1]);
+    return Math.min(Math.max(percent, 1), 100); // Clamp between 1-100
+  }
+
+  // Look for common column patterns
+  const name = columnName.toLowerCase();
+  if (name.includes('left') && name.includes('right')) {
+    return 50; // Two-column layout
+  }
+  if (name.includes('left')) {
+    return 33; // Left column in 3-column layout
+  }
+  if (name.includes('center') || name.includes('middle')) {
+    return 34; // Center column in 3-column layout
+  }
+  if (name.includes('right')) {
+    return 33; // Right column in 3-column layout
+  }
+
+  // Return undefined for automatic width distribution
+  return undefined;
 }
 
 async function toBlock(node: SceneNode, images: Record<string, string>): Promise<Block | null> {

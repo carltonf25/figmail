@@ -27,11 +27,9 @@ function textStyle(typo: any) {
 function renderBlock(b: Block): string {
   if (isTextBlock(b)) {
     const editId = b.editable && (b.id || b.editRegionName) ? generateEditId(b, 'text') : null;
-    const content = `<mj-text ${textStyle(b.typography)} align="${b.align}"${paddingAttrs(b.spacing)}>${b.html}</mj-text>`;
-    
-    if (editId) {
-      return `<div mc:edit="${editId}">${content}</div>`;
-    }
+    const editAttr = editId ? ` mc:edit="${editId}"` : '';
+    const content = `<mj-text${editAttr} ${textStyle(b.typography)} align="${b.align}"${paddingAttrs(b.spacing)}>${b.html}</mj-text>`;
+
     return content;
   }
   
@@ -53,15 +51,13 @@ function renderBlock(b: Block): string {
   
   if (isButtonBlock(b)) {
     const editId = b.editable && (b.id || b.editRegionName) ? generateEditId(b, 'button') : null;
+    const editAttr = editId ? ` mc:edit="${editId}"` : '';
     const radius = b.border?.radius ? ` border-radius="${b.border.radius}px"` : "";
     const border = b.border?.width
       ? ` border="${b.border.width}px solid ${b.border.color ?? b.backgroundColor}"`
       : "";
-    const content = `<mj-button href="${b.href}" align="${b.align}" background-color="${b.backgroundColor}" color="${b.color}" ${textStyle(b.typography)}${radius}${border}${paddingAttrs(b.spacing)}>${b.text}</mj-button>`;
-    
-    if (editId) {
-      return `<div mc:edit="${editId}">${content}</div>`;
-    }
+    const content = `<mj-button${editAttr} href="${b.href}" align="${b.align}" background-color="${b.backgroundColor}" color="${b.color}" ${textStyle(b.typography)}${radius}${border}${paddingAttrs(b.spacing)}>${b.text}</mj-button>`;
+
     return content;
   }
   

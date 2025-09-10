@@ -78,6 +78,18 @@ This document outlines the design conventions and best practices for creating em
 - **Result**: Colored background block in email (no image processing needed)
 - **Best practice**: Use solid colors rather than gradients or images for reliable email client support
 
+### **Multi-Column Layouts (NEW)**
+- **How to create**:
+  1. Create a section frame (e.g., `Email/2-Column Section`)
+  2. Add column frames as direct children
+  3. Name columns: `Email/Column/50%`, `Email/Column/Left`, etc.
+- **Column width options**:
+  - Explicit: `Email/Column/50%`, `Email/Column/33%`
+  - Automatic: `Email/Column/Left`, `Email/Column/Right`, `Email/Column/Center`
+  - Mixed: Combine explicit percentages with automatic distribution
+- **Result**: Responsive multi-column email layouts
+- **Best practice**: Use explicit percentages for precise control, let system auto-distribute for flexibility
+
 ---
 
 ## 🎛️ **Mailchimp Editable Regions (NEW)**
@@ -165,16 +177,20 @@ The plugin automatically creates editable regions in Mailchimp templates, allowi
 ```
 ✅ Good Examples:
 - Email/Header Title
-- Email/Product Name  
+- Email/Product Name
 - Email/Price Display
 - Email/Button/Buy Now
 - Email/Footer/Contact Info
+- Email/Column/50% (two-column layout)
+- Email/Column/Left (automatic width)
+- Email/Column/33% (three-column layout)
 
 ❌ Avoid:
 - Text Layer 1
 - Button
 - Content
 - Untitled
+- Column (missing Email/ prefix)
 ```
 
 ### **Editable vs Non-Editable**
@@ -212,6 +228,12 @@ The plugin automatically creates editable regions in Mailchimp templates, allowi
 - Check that `/NoEdit` suffix is not accidentally added
 - Ensure region names are unique and descriptive
 - Test in Mailchimp's campaign editor after template creation
+
+### **Multi-Column Layout Issues?**
+- Ensure column frames are direct children of section frames
+- Verify column names start with `Email/Column/`
+- Check that percentage values sum to 100% when using explicit widths
+- Use descriptive names (Left/Center/Right) for automatic width distribution
 
 ---
 

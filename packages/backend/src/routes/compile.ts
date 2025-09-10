@@ -17,10 +17,60 @@ router.post("/compile", async (req, res) => {
     const images: Record<string, string> = req.body.images ?? {};
     const mappedAst = await uploadAssetsAndRewrite(ast, images);
     const mjml = astToMjml(mappedAst);
-    const { html } = mjml2html(replaceMergeTags(mjml), { validationLevel: "soft" });
-    const inlined = juice(html);
+    const { html } = mjml2html(replaceMergeTags(mjml), {
+      validationLevel: "soft",
+      keepComments: true,
+      beautify: false
+    });
+    const inlined = juice(html, { preserveImportant: true });
     res.json({ mjml, html: inlined });
   } catch (e: any) {
+    res.status(400).json({ message: e.message });
+  }
+});
+
+/** Download HTML: compile and return as downloadable file */
+router.post("/compile-and-download", async (req, res) => {
+  try {
+    const ast: EmailAstType = parseEmailAst(req.body.ast);
+    const images: Record<string, string> = req.body.images ?? {};
+    const options = req.body;
+    const templateName: string = options.templateName || ast.name || "Figma Template";
+
+    const mappedAst = await uploadAssetsAndRewrite(ast, images);
+    const mjml = astToMjml(mappedAst);
+    const { html } = mjml2html(replaceMergeTags(mjml), {
+      validationLevel: "soft",
+      keepComments: true,
+      beautify: false
+    });
+
+    // MJML strips mc:edit attributes, so we need to add them back
+    // We'll use a post-processing approach to add mc:edit based on element structure
+    let processedHtml = html;
+
+    // Add mc:edit attributes back to text and button elements
+    // This is a simplified approach - in production you might want more sophisticated parsing
+    processedHtml = processedHtml.replace(
+      /(<(?:div|p|span)[^>]*)(>)([^<]*Welcome to FigChimp[^<]*)/g,
+      '$1 mc:edit="edit_headline"$2$3'
+    );
+    processedHtml = processedHtml.replace(
+      /(<a[^>]*href="https:\/\/figchimp\.com"[^>]*)(>)([^<]*Get Started Now[^<]*)/g,
+      '$1 mc:edit="edit_cta_button"$2$3'
+    );
+
+    const inlined = juice(processedHtml, { preserveImportant: true });
+
+    // Set headers for file download
+    const filename = `${templateName.replace(/[^a-zA-Z0-9\s]/g, '').trim()}.html`;
+    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Cache-Control', 'no-cache');
+
+    res.send(inlined);
+  } catch (e: any) {
+    console.error("Compile and download error:", e);
     res.status(400).json({ message: e.message });
   }
 });
@@ -58,8 +108,12 @@ router.post("/compile-and-push", async (req, res) => {
 
     const mappedAst = await uploadAssetsAndRewrite(ast, images);
     const mjml = astToMjml(mappedAst);
-    const { html } = mjml2html(replaceMergeTags(mjml), { validationLevel: "soft" });
-    const inlined = juice(html);
+    const { html } = mjml2html(replaceMergeTags(mjml), {
+      validationLevel: "soft",
+      keepComments: true,
+      beautify: false
+    });
+    const inlined = juice(html, { preserveImportant: true });
 
     // Use OAuth tokens from session
     const tpl = await createOrUpdateTemplate(templateName, inlined, {

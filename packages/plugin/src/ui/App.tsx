@@ -27,6 +27,17 @@ export default function App() {
       if (msg.type === "ERROR") alert(msg.message);
       if (msg.type === "SELECTION_UPDATE") setSelectionStatus({ hasValidFrame: msg.hasValidFrame, message: msg.message });
 
+      // Handle download ready
+      if (msg.type === "DOWNLOAD_READY") {
+        const link = document.createElement('a');
+        link.href = msg.downloadUrl;
+        link.download = msg.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(msg.downloadUrl);
+      }
+
       // Handle OAuth messages
       if (msg.type === "OAUTH_REQUIRED") {
         setOauthUrl(msg.url);
@@ -75,6 +86,10 @@ export default function App() {
 
   const push = () => {
     parent.postMessage({ pluginMessage: { type: "PUSH", subject, preheader, templateName, createCampaign, listId, replyTo } }, "*");
+  };
+
+  const downloadHtml = () => {
+    parent.postMessage({ pluginMessage: { type: "DOWNLOAD_HTML", subject, preheader, templateName } }, "*");
   };
 
   return (
@@ -289,6 +304,24 @@ export default function App() {
             width: "100%",
             marginTop: 12,
             padding: 10,
+            background: selectionStatus?.hasValidFrame ? "#17a2b8" : "#6c757d",
+            color: "white",
+            border: "none",
+            borderRadius: 4,
+            cursor: selectionStatus?.hasValidFrame ? "pointer" : "not-allowed",
+            fontWeight: "bold"
+          }}
+          onClick={selectionStatus?.hasValidFrame ? downloadHtml : undefined}
+          disabled={!selectionStatus?.hasValidFrame}
+        >
+          📥 Download HTML
+        </button>
+
+        <button
+          style={{
+            width: "100%",
+            marginTop: 8,
+            padding: 10,
             background: selectionStatus?.hasValidFrame && oauthStatus?.connected ? "#28a745" : "#6c757d",
             color: "white",
             border: "none",
@@ -302,10 +335,15 @@ export default function App() {
           🚀 Compile & Push to Mailchimp
         </button>
 
-        {(!oauthStatus?.connected || !selectionStatus?.hasValidFrame) && (
+        {(!selectionStatus?.hasValidFrame) && (
           <div style={{ fontSize: 11, color: '#666', marginTop: 8, textAlign: 'center' }}>
-            {!oauthStatus?.connected && "Connect Mailchimp first • "}
-            {!selectionStatus?.hasValidFrame && "Select a Frame in Figma"}
+            Select a Frame in Figma to get started
+          </div>
+        )}
+
+        {(selectionStatus?.hasValidFrame && !oauthStatus?.connected) && (
+          <div style={{ fontSize: 11, color: '#666', marginTop: 8, textAlign: 'center' }}>
+            Connect Mailchimp to use "Compile & Push" feature
           </div>
         )}
       </div>
