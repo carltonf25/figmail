@@ -1,7 +1,7 @@
 import { Router } from "express";
 import mjml2html from "mjml";
 import juice from "juice";
-import { EmailAst as EmailAstSchema, EmailAst as EmailAstType, parseEmailAst } from "@figmc/shared";
+import { EmailAst as EmailAstSchema, EmailAst as EmailAstType, parseEmailAst, safeParseEmailAst } from "@figmc/shared";
 import { astToMjml } from "../services/astToMjml.js";
 import { replaceMergeTags } from "../services/mergeTags.js";
 import { uploadAssetsAndRewrite } from "../services/assets.js";
@@ -10,10 +10,42 @@ import { debugRequest } from "../utils/debug.js";
 
 const router = Router();
 
+// Helper function to parse AST with better error messages
+function parseAstWithBetterErrors(data: any): EmailAstType {
+  const result = safeParseEmailAst(data);
+  if (!result.success) {
+    const errors = result.error.errors.map(err => ({
+      path: err.path.join(' → '),
+      message: err.message,
+      received: err.code === 'invalid_type' ? `Got: ${typeof (err as any).received}` : undefined
+    }));
+
+    console.error('AST Validation Errors:', errors);
+
+    // Create a user-friendly error message
+    const firstError = errors[0];
+    if (firstError.path.includes('href')) {
+      throw new Error(`Invalid URL in ${firstError.path.replace('sections → ', 'section ').replace('columns → ', 'column ').replace('blocks → ', 'block ')}: ${firstError.message}.
+
+Common URL formats that work:
+• Full URLs: https://example.com
+• Email links: mailto:name@domain.com
+• Phone links: tel:+1234567890
+• Anchor links: #section-id
+• Relative URLs: /page or page.html
+
+Current value causing error may be empty, malformed, or contain invalid characters.`);
+    }
+
+    throw new Error(`Validation error in ${firstError.path}: ${firstError.message}`);
+  }
+  return result.data;
+}
+
 /** Development helper: compile only */
 router.post("/compile", async (req, res) => {
   try {
-    const ast: EmailAstType = parseEmailAst(req.body.ast);
+    const ast: EmailAstType = parseAstWithBetterErrors(req.body.ast);
     const images: Record<string, string> = req.body.images ?? {};
     const mappedAst = await uploadAssetsAndRewrite(ast, images);
     const mjml = astToMjml(mappedAst);
@@ -32,7 +64,7 @@ router.post("/compile", async (req, res) => {
 /** Download HTML: compile and return as downloadable file */
 router.post("/compile-and-download", async (req, res) => {
   try {
-    const ast: EmailAstType = parseEmailAst(req.body.ast);
+    const ast: EmailAstType = parseAstWithBetterErrors(req.body.ast);
     const images: Record<string, string> = req.body.images ?? {};
     const options = req.body;
     const templateName: string = options.templateName || ast.name || "Figma Template";
@@ -96,7 +128,7 @@ router.post("/compile-and-push", async (req, res) => {
       });
     }
 
-    const ast: EmailAstType = parseEmailAst(req.body.ast);
+    const ast: EmailAstType = parseAstWithBetterErrors(req.body.ast);
     const images: Record<string, string> = req.body.images ?? {};
     const options = req.body;
     const templateName: string = options.templateName || ast.name || "Figma Template";

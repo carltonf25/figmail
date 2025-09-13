@@ -5,6 +5,7 @@ import { json } from "express";
 import session from "express-session";
 import compileRouter from "./routes/compile.js";
 import authRouter from "./routes/auth.js";
+import { testS3Connection } from "./services/assets.js";
 
 const app = express();
 
@@ -54,7 +55,36 @@ app.use(cors({
 }));
 app.use(json({ limit: "25mb" }));
 
-app.get("/health", (_req, res) => res.json({ ok: true }));
+app.get("/health", async (_req, res) => {
+  // Basic health check
+  const health = { ok: true, timestamp: new Date().toISOString() };
+  res.json(health);
+});
+
+app.get("/health/s3", async (_req, res) => {
+  try {
+    const s3Status = await testS3Connection();
+    res.json({
+      service: "s3",
+      status: s3Status.success ? "healthy" : "unhealthy",
+      message: s3Status.message,
+      timestamp: new Date().toISOString(),
+      config: {
+        bucket: process.env.S3_BUCKET || "not configured",
+        region: process.env.AWS_REGION || "us-east-1",
+        prefix: process.env.S3_PREFIX || "emails",
+        cloudfront: process.env.CLOUDFRONT_DOMAIN || "not configured"
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      service: "s3",
+      status: "error",
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
 
 app.use("/auth", authRouter);
 app.use("/", compileRouter);

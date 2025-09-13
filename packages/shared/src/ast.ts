@@ -5,6 +5,25 @@ const Color = z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color")
 const NonNegativeNumber = z.number().min(0);
 const PositiveNumber = z.number().min(1);
 
+// Flexible URL validation that handles common email/web patterns
+const FlexibleUrl = z.string().refine((val) => {
+  if (!val || val.trim() === "") return false;
+
+  // Allow common patterns
+  const patterns = [
+    /^https?:\/\/.+/,           // http/https URLs
+    /^mailto:.+@.+/,            // Email links
+    /^tel:\+?[\d\s\-\(\)]+$/,   // Phone links
+    /^#.*/,                     // Anchor links
+    /^\/.*/ ,                   // Relative URLs starting with /
+    /^[a-zA-Z0-9\-_.~]+.*$/     // Simple relative URLs
+  ];
+
+  return patterns.some(pattern => pattern.test(val.trim()));
+}, {
+  message: "Must be a valid URL, email (mailto:), phone (tel:), anchor (#), or relative URL"
+});
+
 // Typography schema
 const Typography = z.object({
   fontFamily: z.string().optional(),
@@ -71,7 +90,7 @@ const ImageBlock = z.object({
   align: Alignment.default("center"),
   spacing: Spacing,
   border: Border,
-  href: z.string().url().optional(), // Link URL for clickable images
+  href: FlexibleUrl.optional(), // Link URL for clickable images
   borderRadius: z.string().optional(), // Enhanced styling support
   boxShadow: z.string().optional(), // Enhanced styling support
   inlineCss: z.string().optional(), // Enhanced styling support
@@ -81,7 +100,7 @@ const ButtonBlock = z.object({
   type: z.literal("button"),
   id: z.string().optional(), // Unique identifier for mc:edit regions
   text: z.string(),
-  href: z.string().url(),
+  href: FlexibleUrl,
   backgroundColor: Color.default("#007bff"),
   color: Color.default("#ffffff"),
   typography: Typography,

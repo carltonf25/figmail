@@ -107,6 +107,8 @@ The authorization page should open automatically.
       console.log("Starting buildAstAndImages for frame:", selection.name);
       const { ast, images } = await buildAstAndImages(selection);
       console.log("buildAstAndImages completed, AST:", ast);
+      console.log("Total images found:", Object.keys(images).length);
+      console.log("Image keys:", Object.keys(images));
 
       figma.ui.postMessage({ type: "PROGRESS", step: "Compiling & pushing..." });
       const response = await fetch(`${BACKEND}/compile-and-push`, {
@@ -175,6 +177,8 @@ The authorization page should open automatically.
       console.log("Starting buildAstAndImages for download:", selection.name);
       const { ast, images } = await buildAstAndImages(selection);
       console.log("buildAstAndImages completed for download, AST:", ast);
+      console.log("Total images found:", Object.keys(images).length);
+      console.log("Image keys:", Object.keys(images));
 
       figma.ui.postMessage({ type: "PROGRESS", step: "Compiling HTML..." });
       const response = await fetch(`${BACKEND}/compile-and-download`, {
@@ -229,6 +233,10 @@ The authorization page should open automatically.
 
 async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, images: Record<string, string> }> {
   console.log("buildAstAndImages called with frame:", frame.name, "type:", frame.type);
+  console.log("Frame children count:", frame.children.length);
+  frame.children.forEach((child, index) => {
+    console.log(`Child ${index}: type=${child.type}, name=${(child as any).name || 'unnamed'}`);
+  });
 
   const ast: EmailAst = {
     name: frame.name,
@@ -239,7 +247,8 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
 
   const images: Record<string, string> = {};
 
-  const sectionNodes = frame.children.filter((n): n is FrameNode => n.type === "FRAME").reverse();
+  const sectionNodes = frame.children.filter((n): n is FrameNode => n.type === "FRAME");
+  console.log("Section nodes found:", sectionNodes.length);
 
   // If no child frames found, treat the main frame as a single section
   if (sectionNodes.length === 0) {
@@ -263,8 +272,9 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
       blocks: []
     };
 
-    // Process all children of the main frame as blocks (maintain intended order)
-    for (const child of frame.children) {
+    // Process all children of the main frame as blocks (sort by Y position top-to-bottom)
+    const sortedChildren = frame.children.slice().sort((a, b) => a.y - b.y);
+    for (const child of sortedChildren) {
       const block = await toBlock(child as SceneNode, images);
       if (block) col.blocks.push(block);
     }
@@ -274,6 +284,11 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
   } else {
     // Process each child frame as a section
     for (const sectionNode of sectionNodes) {
+      console.log(`Processing section: ${sectionNode.name}, children count: ${sectionNode.children.length}`);
+      sectionNode.children.forEach((child, index) => {
+        console.log(`  Section child ${index}: type=${child.type}, name=${(child as any).name || 'unnamed'}`);
+      });
+
       const section: Section = {
         id: sectionNode.id,
         name: sectionNode.name || "Section",
@@ -324,10 +339,22 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
             blocks: []
           };
 
-          // Process all children of this column as blocks (maintain intended order)
-          for (const child of columnFrame.children) {
-            const block = await toBlock(child as SceneNode, images);
-            if (block) col.blocks.push(block);
+          // Process all children of this column as blocks (sort by Y position top-to-bottom)
+          const sortedChildren = columnFrame.children.slice().sort((a, b) => a.y - b.y);
+          for (const child of sortedChildren) {
+            // If this is a nested frame (but not a column frame), process its children
+            if (child.type === "FRAME" && !child.name.startsWith("Email/Column")) {
+              console.log(`Processing nested frame in column: ${child.name}, children: ${child.children.length}`);
+              const nestedSortedChildren = child.children.slice().sort((a, b) => a.y - b.y);
+              for (const nestedChild of nestedSortedChildren) {
+                console.log(`  Nested child in column: type=${nestedChild.type}, name=${(nestedChild as any).name || 'unnamed'}`);
+                const block = await toBlock(nestedChild as SceneNode, images);
+                if (block) col.blocks.push(block);
+              }
+            } else {
+              const block = await toBlock(child as SceneNode, images);
+              if (block) col.blocks.push(block);
+            }
           }
 
           section.columns.push(col);
@@ -343,10 +370,22 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
           blocks: []
         };
 
-        // Process all children of this section as blocks (maintain intended order)
-        for (const child of sectionNode.children) {
-          const block = await toBlock(child as SceneNode, images);
-          if (block) col.blocks.push(block);
+        // Process all children of this section as blocks (sort by Y position top-to-bottom)
+        const sortedChildren = sectionNode.children.slice().sort((a, b) => a.y - b.y);
+        for (const child of sortedChildren) {
+          // If this is a nested frame (but not a column frame), process its children
+          if (child.type === "FRAME" && !child.name.startsWith("Email/Column")) {
+            console.log(`Processing nested frame: ${child.name}, children: ${child.children.length}`);
+            const nestedSortedChildren = child.children.slice().sort((a, b) => a.y - b.y);
+            for (const nestedChild of nestedSortedChildren) {
+              console.log(`  Nested child: type=${nestedChild.type}, name=${(nestedChild as any).name || 'unnamed'}`);
+              const block = await toBlock(nestedChild as SceneNode, images);
+              if (block) col.blocks.push(block);
+            }
+          } else {
+            const block = await toBlock(child as SceneNode, images);
+            if (block) col.blocks.push(block);
+          }
         }
 
         section.columns.push(col);
@@ -1002,10 +1041,30 @@ async function toBlock(node: SceneNode, images: Record<string, string>): Promise
   }
 
   if (node.type === "RECTANGLE") {
+    console.log("Processing RECTANGLE node:", node.id, "name:", nm);
     // Check if this rectangle should be a background container or an image
     const backgroundColor = toHex(((node as any).fills) as any);
+    console.log("Rectangle backgroundColor:", backgroundColor);
 
-    if (backgroundColor && backgroundColor !== "#FFFFFF") {
+    // If the rectangle has "Email/Image" in its name, always treat it as an image
+    if (/Email\/Image/i.test(nm)) {
+      console.log("Found Email/Image rectangle, exporting as image:", nm);
+      const bytes = await (node as GeometryMixin).exportAsync({ format: "PNG", constraint: { type: "SCALE", value: 2 } });
+      const key = node.id;
+      images[key] = `data:image/png;base64,${figma.base64Encode(bytes)}`;
+      console.log("Added image to images object with key:", key);
+      return {
+        id: node.id,
+        name: (node as any).name,
+        type: "image",
+        key,
+        alt: (node as any).name ?? "",
+        width: Math.round(((node as LayoutMixin).width)),
+        align: "center",
+        border: {},
+        spacing: paddingFrom(node as any)
+      };
+    } else if (backgroundColor && backgroundColor !== "#FFFFFF") {
       // Rectangle with color - create a container block
       return {
         id: node.id,
