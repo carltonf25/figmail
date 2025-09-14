@@ -102,7 +102,7 @@ export default function App() {
   return (
     <div style={{
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-      background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      background: "#ffffff",
       margin: 0,
       padding: "20px",
       minHeight: "100vh",
@@ -110,23 +110,46 @@ export default function App() {
     }}>
       <div style={{ maxWidth: 380, margin: "0 auto" }}>
         <div style={{
-          background: "rgba(255, 255, 255, 0.95)",
-          backdropFilter: "blur(10px)",
-          borderRadius: 16,
+          background: "#ffffff",
+          borderRadius: 8,
           padding: 24,
           marginBottom: 16,
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
-          border: "1px solid rgba(255, 255, 255, 0.2)"
+          boxShadow: "4px 4px 0px oklch(0.25 0 0)",
+          border: "2px solid oklch(0.25 0 0)"
         }}>
-          <h3 style={{
-            margin: "0 0 16px 0",
-            fontSize: 18,
-            fontWeight: 600,
-            color: "#1a1a1a",
-            letterSpacing: "-0.025em"
-          }}>🎨 FigMail</h3>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            marginBottom: "16px"
+          }}>
+            <div
+              style={{
+                width: "32px",
+                height: "24px",
+                backgroundColor: "oklch(0.96 0 0)",
+                border: "2px solid oklch(0.25 0 0)",
+                borderRadius: "2px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "12px",
+                fontWeight: "bold",
+                color: "oklch(0.25 0 0)"
+              }}
+            >
+              📧
+            </div>
+            <h3 style={{
+              margin: 0,
+              fontSize: 18,
+              fontWeight: 600,
+              color: "oklch(0.25 0 0)",
+              letterSpacing: "-0.025em"
+            }}>FigMail</h3>
+          </div>
           <p style={{
-            color: "#6b7280",
+            color: "oklch(0.55 0 0)",
             marginBottom: 20,
             fontSize: 14
           }}>
@@ -137,15 +160,15 @@ export default function App() {
           {selectionStatus && (
             <div style={{
               padding: "12px 16px",
-              borderRadius: 8,
+              borderRadius: 4,
               marginBottom: 16,
               fontSize: 13,
-              border: "none",
               background: selectionStatus.hasValidFrame
-                ? "linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)"
-                : "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)",
-              color: selectionStatus.hasValidFrame ? "#1e40af" : "#6b7280",
-              borderLeft: `4px solid ${selectionStatus.hasValidFrame ? "#2563eb" : "#9ca3af"}`
+                ? "oklch(0.96 0 0)"
+                : "oklch(0.96 0 0)",
+              color: selectionStatus.hasValidFrame ? "oklch(0.25 0 0)" : "oklch(0.55 0 0)",
+              border: `2px solid ${selectionStatus.hasValidFrame ? "oklch(0.65 0.25 330)" : "oklch(0.45 0 0)"}`,
+              boxShadow: selectionStatus.hasValidFrame ? "2px 2px 0px oklch(0.65 0.25 330)" : "2px 2px 0px oklch(0.45 0 0)"
             }}>
               <span>{selectionStatus.message}</span>
             </div>
@@ -156,29 +179,30 @@ export default function App() {
             <label style={{
               fontSize: 14,
               fontWeight: 600,
-              color: "#374151",
+              color: "oklch(0.25 0 0)",
               marginBottom: 8,
               display: "block"
-            }}>🎯 Quick Start Templates</label>
+            }}>Quick Start Templates</label>
             <select
               value={selectedTemplate}
               onChange={(e) => setSelectedTemplate(e.target.value)}
               style={{
                 width: "100%",
                 padding: "10px 12px",
-                border: "1px solid #d1d5db",
-                borderRadius: 8,
+                border: "2px solid oklch(0.25 0 0)",
+                borderRadius: 4,
                 fontSize: 13,
                 background: "white",
                 cursor: "pointer",
-                marginBottom: 8
+                marginBottom: 8,
+                boxShadow: "2px 2px 0px oklch(0.25 0 0)"
               }}
             >
               <option value="">Choose a template...</option>
-              <option value="modern-newsletter">📧 Newsletter</option>
-              <option value="modern-promotional">🎯 Promotional</option>
-              <option value="modern-welcome">👋 Welcome Email</option>
-              <option value="modern-product-showcase">🛍️ Product Showcase</option>
+              <option value="modern-newsletter">Newsletter</option>
+              <option value="modern-promotional">Promotional</option>
+              <option value="modern-welcome">Welcome Email</option>
+              <option value="modern-product-showcase">Product Showcase</option>
             </select>
             <button
               onClick={handleInsertTemplate}
@@ -186,20 +210,21 @@ export default function App() {
               style={{
                 width: "100%",
                 background: selectedTemplate
-                  ? "linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)"
-                  : "#6c757d",
-                color: selectedTemplate ? "#374151" : "white",
-                border: "none",
+                  ? "oklch(0.65 0.25 330)"
+                  : "oklch(0.45 0 0)",
+                color: "white",
+                border: `2px solid ${selectedTemplate ? "oklch(0.65 0.25 330)" : "oklch(0.45 0 0)"}`,
                 padding: "10px",
-                borderRadius: 8,
+                borderRadius: 4,
                 cursor: selectedTemplate ? "pointer" : "not-allowed",
                 fontSize: 13,
                 fontWeight: 500,
                 marginBottom: 8,
-                transition: "all 0.2s ease"
+                transition: "all 0.2s ease",
+                boxShadow: selectedTemplate ? "2px 2px 0px oklch(0.25 0 0)" : "2px 2px 0px oklch(0.25 0 0)"
               }}
             >
-              ✨ Insert Template
+              Insert Template
             </button>
           </div>
 
@@ -214,55 +239,55 @@ export default function App() {
               disabled={!selectionStatus?.hasValidFrame}
               style={{
                 padding: "12px 16px",
-                borderRadius: 8,
+                borderRadius: 4,
                 fontSize: 13,
                 fontWeight: 500,
                 cursor: selectionStatus?.hasValidFrame ? "pointer" : "not-allowed",
-                border: "none",
+                border: `2px solid ${selectionStatus?.hasValidFrame ? "oklch(0.6 0.25 240)" : "oklch(0.45 0 0)"}`,
                 flex: 1,
                 background: selectionStatus?.hasValidFrame
-                  ? "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)"
-                  : "#6c757d",
+                  ? "oklch(0.6 0.25 240)"
+                  : "oklch(0.45 0 0)",
                 color: "white",
-                transition: "all 0.2s ease"
+                transition: "all 0.2s ease",
+                boxShadow: "2px 2px 0px oklch(0.25 0 0)"
               }}
             >
-              📥 Download HTML
+              Download HTML
             </button>
             <button
               onClick={push}
               disabled={!selectionStatus?.hasValidFrame || !oauthStatus?.connected}
               style={{
                 padding: "12px 16px",
-                borderRadius: 8,
+                borderRadius: 4,
                 fontSize: 13,
                 fontWeight: 500,
                 cursor: (selectionStatus?.hasValidFrame && oauthStatus?.connected) ? "pointer" : "not-allowed",
-                border: "none",
+                border: `2px solid ${(selectionStatus?.hasValidFrame && oauthStatus?.connected) ? "oklch(0.6 0.25 180)" : "oklch(0.45 0 0)"}`,
                 flex: 1,
                 background: (selectionStatus?.hasValidFrame && oauthStatus?.connected)
-                  ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
-                  : "#6c757d",
+                  ? "oklch(0.6 0.25 180)"
+                  : "oklch(0.45 0 0)",
                 color: "white",
-                transition: "all 0.2s ease"
+                transition: "all 0.2s ease",
+                boxShadow: "2px 2px 0px oklch(0.25 0 0)"
               }}
             >
-              🚀 Push to Mailchimp
+              Push to Mailchimp
             </button>
           </div>
 
           {/* OAuth Status */}
           <div style={{
-            background: oauthStatus?.connected
-              ? "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)"
-              : "linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)",
+            background: "oklch(0.96 0 0)",
             padding: "12px 16px",
-            borderRadius: 8,
+            borderRadius: 4,
             marginTop: 16,
             fontSize: 13,
-            border: "none",
-            color: oauthStatus?.connected ? "#065f46" : "#92400e",
-            borderLeft: `4px solid ${oauthStatus?.connected ? "#059669" : "#d97706"}`
+            color: oauthStatus?.connected ? "oklch(0.25 0 0)" : "oklch(0.55 0 0)",
+            border: `2px solid ${oauthStatus?.connected ? "oklch(0.6 0.25 180)" : "oklch(0.7 0.25 60)"}`,
+            boxShadow: `2px 2px 0px ${oauthStatus?.connected ? "oklch(0.6 0.25 180)" : "oklch(0.7 0.25 60)"}`
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
               <span>{oauthStatus?.connected ? "✅" : "⚠️"}</span>
@@ -277,17 +302,18 @@ export default function App() {
               <button
                 onClick={connect}
                 style={{
-                  background: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
+                  background: "oklch(0.6 0.25 240)",
                   color: "white",
-                  border: "none",
+                  border: "2px solid oklch(0.6 0.25 240)",
                   padding: "8px 12px",
-                  borderRadius: 6,
+                  borderRadius: 4,
                   cursor: "pointer",
                   fontSize: 12,
-                  marginTop: 4
+                  marginTop: 4,
+                  boxShadow: "2px 2px 0px oklch(0.25 0 0)"
                 }}
               >
-                🔗 Connect Mailchimp
+                Connect Mailchimp
               </button>
             )}
           </div>
@@ -295,28 +321,30 @@ export default function App() {
           {/* Progress */}
           {progress && (
             <div style={{
-              color: "#6b7280",
+              color: "oklch(0.25 0 0)",
               fontStyle: "normal",
               marginTop: 16,
               padding: "12px",
-              background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
-              borderRadius: 8,
-              border: "1px solid #0ea5e9",
-              textAlign: "center"
+              background: "oklch(0.96 0 0)",
+              borderRadius: 4,
+              border: "2px solid oklch(0.6 0.25 240)",
+              textAlign: "center",
+              boxShadow: "2px 2px 0px oklch(0.6 0.25 240)"
             }}>
-              ⏳ {progress.step}
+              {progress.step}
             </div>
           )}
 
           {/* Help Text */}
           <div style={{
             fontSize: 12,
-            color: "#6b7280",
+            color: "oklch(0.55 0 0)",
             marginTop: 16,
             textAlign: "center",
             padding: 8,
-            background: "rgba(255, 255, 255, 0.8)",
-            borderRadius: 6
+            background: "oklch(0.98 0 0)",
+            borderRadius: 4,
+            border: "1px solid oklch(0.9 0 0)"
           }}>
             {(!selectionStatus?.hasValidFrame)
               ? "Select a Frame in Figma or insert a template to get started"

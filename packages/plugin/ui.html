@@ -16,7 +16,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #ffffff;
             margin: 0;
             padding: 20px;
             min-height: 100vh;
@@ -95,61 +95,60 @@
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
+            background: #ffffff;
+            border-radius: 8px;
             padding: 24px;
             margin-bottom: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 4px 4px 0px oklch(0.25 0 0);
+            border: 2px solid oklch(0.25 0 0);
         }
 
         h3 {
             margin: 0 0 16px 0;
             font-size: 18px;
             font-weight: 600;
-            color: #1a1a1a;
+            color: oklch(0.25 0 0);
             letter-spacing: -0.025em;
         }
 
         .section-title {
             font-size: 14px;
             font-weight: 600;
-            color: #374151;
+            color: oklch(0.25 0 0);
             margin-bottom: 12px;
             display: block;
         }
 
         .status-box {
             padding: 12px 16px;
-            border-radius: 8px;
+            border-radius: 4px;
             margin-bottom: 16px;
             font-size: 13px;
-            border: none;
+            background: oklch(0.96 0 0);
         }
 
         .status-connected {
-            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-            color: #065f46;
-            border-left: 4px solid #059669;
+            color: oklch(0.25 0 0);
+            border: 2px solid oklch(0.6 0.25 180);
+            box-shadow: 2px 2px 0px oklch(0.6 0.25 180);
         }
 
         .status-disconnected {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            color: #92400e;
-            border-left: 4px solid #d97706;
+            color: oklch(0.55 0 0);
+            border: 2px solid oklch(0.7 0.25 60);
+            box-shadow: 2px 2px 0px oklch(0.7 0.25 60);
         }
 
         .status-selected {
-            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-            color: #1e40af;
-            border-left: 4px solid #2563eb;
+            color: oklch(0.25 0 0);
+            border: 2px solid oklch(0.65 0.25 330);
+            box-shadow: 2px 2px 0px oklch(0.65 0.25 330);
         }
 
         .status-unselected {
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-            color: #6b7280;
-            border-left: 4px solid #9ca3af;
+            color: oklch(0.55 0 0);
+            border: 2px solid oklch(0.45 0 0);
+            box-shadow: 2px 2px 0px oklch(0.45 0 0);
         }
 
         .form-group {
@@ -167,18 +166,19 @@
         input[type="text"], input[type="email"] {
             width: 100%;
             padding: 10px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
+            border: 2px solid oklch(0.25 0 0);
+            border-radius: 4px;
             font-size: 13px;
             background: white;
             box-sizing: border-box;
             transition: all 0.2s ease;
+            box-shadow: 2px 2px 0px oklch(0.25 0 0);
         }
 
         input[type="text"]:focus, input[type="email"]:focus {
             outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            border-color: oklch(0.65 0.25 330);
+            box-shadow: 2px 2px 0px oklch(0.65 0.25 330);
         }
 
         input[type="checkbox"] {
@@ -194,69 +194,73 @@
 
         .btn {
             padding: 12px 16px;
-            border-radius: 8px;
+            border-radius: 4px;
             font-size: 13px;
             font-weight: 500;
             cursor: pointer;
-            border: none;
+            border: 2px solid;
             transition: all 0.2s ease;
             flex: 1;
             text-align: center;
             text-decoration: none;
             display: inline-block;
+            box-shadow: 2px 2px 0px oklch(0.25 0 0);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            background: oklch(0.6 0.25 240);
             color: white;
-            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+            border-color: oklch(0.6 0.25 240);
         }
 
         .btn-primary:hover:not(:disabled) {
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+            background: oklch(0.55 0.25 240);
+            transform: translateX(-2px) translateY(-2px);
+            box-shadow: 4px 4px 0px oklch(0.25 0 0);
         }
 
         .btn-secondary {
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-            color: #374151;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            background: oklch(0.65 0.25 330);
+            color: white;
+            border-color: oklch(0.65 0.25 330);
         }
 
         .btn-secondary:hover:not(:disabled) {
-            background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background: oklch(0.6 0.25 330);
+            transform: translateX(-2px) translateY(-2px);
+            box-shadow: 4px 4px 0px oklch(0.25 0 0);
         }
 
         .btn-success {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            background: oklch(0.6 0.25 180);
             color: white;
-            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+            border-color: oklch(0.6 0.25 180);
         }
 
         .btn-success:hover:not(:disabled) {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+            background: oklch(0.55 0.25 180);
+            transform: translateX(-2px) translateY(-2px);
+            box-shadow: 4px 4px 0px oklch(0.25 0 0);
         }
 
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none !important;
+            background: oklch(0.45 0 0) !important;
+            border-color: oklch(0.45 0 0) !important;
         }
 
         .progress {
-            color: #6b7280;
+            color: oklch(0.25 0 0);
             font-style: normal;
             margin-top: 16px;
             padding: 12px;
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border-radius: 8px;
-            border: 1px solid #0ea5e9;
+            background: oklch(0.96 0 0);
+            border-radius: 4px;
+            border: 2px solid oklch(0.6 0.25 240);
             text-align: center;
+            box-shadow: 2px 2px 0px oklch(0.6 0.25 240);
         }
 
         .checkbox-container {
@@ -288,29 +292,31 @@
 
         .help-text {
             font-size: 12px;
-            color: #6b7280;
+            color: oklch(0.55 0 0);
             margin-top: 16px;
             text-align: center;
             padding: 8px;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 6px;
+            background: oklch(0.98 0 0);
+            border-radius: 4px;
+            border: 1px solid oklch(0.9 0 0);
         }
 
         select {
             width: 100%;
             padding: 10px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
+            border: 2px solid oklch(0.25 0 0);
+            border-radius: 4px;
             font-size: 13px;
             background: white;
             cursor: pointer;
             transition: all 0.2s ease;
+            box-shadow: 2px 2px 0px oklch(0.25 0 0);
         }
 
         select:focus {
             outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            border-color: oklch(0.65 0.25 330);
+            box-shadow: 2px 2px 0px oklch(0.65 0.25 330);
         }
 
         .fade-in {
@@ -326,31 +332,34 @@
 <body>
     <div class="container">
         <div class="card">
-            <h3>🎨 FigMail</h3>
-            <p style="color: #6b7280; margin-bottom: 20px;">Convert Figma designs to email templates</p>
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                <div style="width: 32px; height: 24px; background-color: oklch(0.96 0 0); border: 2px solid oklch(0.25 0 0); border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: oklch(0.25 0 0);">📧</div>
+                <h3 style="margin: 0;">FigMail</h3>
+            </div>
+            <p style="color: oklch(0.55 0 0); margin-bottom: 20px;">Convert Figma designs to email templates</p>
 
             <!-- Selection Status -->
             <div id="selectionStatus" class="status-box status-unselected">
-                <span>⚠️ Selection: No selection</span>
+                <span>Selection: No selection</span>
             </div>
 
             <!-- Template Section -->
             <div class="form-group">
-                <label class="section-title">🎯 Quick Start Templates</label>
+                <label class="section-title">Quick Start Templates</label>
                 <select id="templateSelect">
                     <option value="">Choose a template...</option>
-                    <option value="modern-newsletter">📧 Newsletter</option>
-                    <option value="modern-promotional">🎯 Promotional</option>
-                    <option value="modern-welcome">👋 Welcome Email</option>
-                    <option value="modern-product-showcase">🛍️ Product Showcase</option>
+                    <option value="modern-newsletter">Newsletter</option>
+                    <option value="modern-promotional">Promotional</option>
+                    <option value="modern-welcome">Welcome Email</option>
+                    <option value="modern-product-showcase">Product Showcase</option>
                 </select>
-                <button id="insertTemplateBtn" class="btn btn-secondary" style="margin-top: 8px;" disabled>✨ Insert Template</button>
+                <button id="insertTemplateBtn" class="btn btn-secondary" style="margin-top: 8px;" disabled>Insert Template</button>
             </div>
 
             <!-- Action Buttons -->
             <div class="action-buttons">
-                <button id="downloadBtn" class="btn btn-primary" disabled>📥 Download HTML</button>
-                <button id="pushBtn" class="btn btn-success" disabled>🚀 Push to Mailchimp</button>
+                <button id="downloadBtn" class="btn btn-primary" disabled>Download HTML</button>
+                <button id="pushBtn" class="btn btn-success" disabled>Push to Mailchimp</button>
             </div>
 
             <!-- Mailchimp Fields (Hidden by default) -->
@@ -393,7 +402,7 @@
                 </div>
 
                 <div class="action-buttons" style="margin-top: 24px;">
-                    <button id="confirmPushBtn" class="btn btn-success">✅ Confirm & Push</button>
+                    <button id="confirmPushBtn" class="btn btn-success">Confirm & Push</button>
                     <button id="cancelPushBtn" class="btn btn-secondary">Cancel</button>
                 </div>
             </div>
@@ -401,10 +410,9 @@
             <!-- OAuth Status -->
             <div id="oauthStatus" class="status-box status-disconnected">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span>⚠️</span>
                     <strong>Not connected to Mailchimp</strong>
                 </div>
-                <button id="connectBtn" class="btn btn-primary" style="margin-top: 8px;">🔗 Connect Mailchimp</button>
+                <button id="connectBtn" class="btn btn-primary" style="margin-top: 8px;">Connect Mailchimp</button>
             </div>
 
             <div id="progress" class="progress" style="display: none;"></div>
@@ -566,7 +574,7 @@
             if (!msg) return;
 
             if (msg.type === "PROGRESS") {
-                progressDiv.textContent = "⏳ " + msg.step;
+                progressDiv.textContent = msg.step;
                 progressDiv.style.display = 'block';
             }
 

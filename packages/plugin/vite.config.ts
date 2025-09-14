@@ -38,6 +38,7 @@ export default defineConfig(({ command, mode }) => {
       },
       emptyOutDir: false
     },
-    base: "./"
+    base: "./",
+    publicDir: "public"
   };
 });
