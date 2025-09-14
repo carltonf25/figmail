@@ -61,7 +61,6 @@ async function uploadWithRetry(bucket: string, key: string, body: Buffer, conten
         Key: key,
         Body: body,
         ContentType: contentType,
-        ACL: "public-read",
         CacheControl: "public, max-age=31536000", // 1 year cache
         Metadata: {
           uploadedAt: new Date().toISOString(),

@@ -12,38 +12,104 @@ function paddingAttrs(sp?: { paddingTop?: number; paddingRight?: number; padding
   return ` padding="${vals.map(v => `${v}px`).join(" ")}"`;
 }
 
+// Email-safe font stacks for optimal cross-client compatibility
+const EMAIL_FONT_STACKS: Record<string, string> = {
+  'Arial': '"Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif',
+  'Helvetica': '"Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif',
+  'Inter': '"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  'Roboto': '"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+  'System': '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  'Georgia': 'Georgia, "Times New Roman", Times, serif',
+  'Times': '"Times New Roman", Times, Georgia, serif',
+  'Courier': '"Courier New", Courier, "Lucida Sans Typewriter", monospace',
+  'default-sans': '"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  'default-serif': 'Georgia, "Times New Roman", Times, serif'
+};
+
+// Map Figma fonts to email-safe equivalents
+function getEmailFontStack(figmaFont: string): string {
+  if (!figmaFont) return EMAIL_FONT_STACKS['default-sans'];
+
+  // Direct matches
+  if (EMAIL_FONT_STACKS[figmaFont]) {
+    return EMAIL_FONT_STACKS[figmaFont];
+  }
+
+  // Smart mapping for common font categories
+  const fontLower = figmaFont.toLowerCase();
+
+  if (fontLower.includes('inter') || fontLower.includes('system')) {
+    return EMAIL_FONT_STACKS['Inter'];
+  }
+  if (fontLower.includes('arial') || fontLower.includes('helvetica')) {
+    return EMAIL_FONT_STACKS['Arial'];
+  }
+  if (fontLower.includes('georgia') || fontLower.includes('times')) {
+    return EMAIL_FONT_STACKS['Georgia'];
+  }
+  if (fontLower.includes('courier') || fontLower.includes('mono')) {
+    return EMAIL_FONT_STACKS['Courier'];
+  }
+
+  // Fallback: if it's already a stack, use it; otherwise add our fallback
+  if (figmaFont.includes(',')) {
+    return figmaFont;
+  }
+
+  return `"${figmaFont}", ${EMAIL_FONT_STACKS['default-sans']}`;
+}
+
 function textStyle(typo: any) {
   const attrs: string[] = [];
 
-  // Enhanced font family with fallbacks
-  if (typo?.fontFamily) {
-    const fontFamily = typo.fontFamily.includes(',') ? typo.fontFamily : `${typo.fontFamily}, Arial, sans-serif`;
-    attrs.push(`font-family="${fontFamily}"`);
-  } else {
-    attrs.push(`font-family="Arial, sans-serif"`);
-  }
+  // Enhanced font family with email-safe stacks
+  const fontStack = getEmailFontStack(typo?.fontFamily);
+  attrs.push(`font-family="${fontStack}"`);
 
-  // Responsive font sizing
+  // Precise font sizing - preserve exact sizes for pixel-perfect rendering
   if (typo?.fontSize) {
-    const baseSize = parseInt(typo.fontSize);
-    const responsiveSize = Math.max(14, Math.min(24, baseSize)); // Clamp between 14-24px for better readability
-    attrs.push(`font-size="${responsiveSize}px"`);
+    const fontSize = parseInt(typo.fontSize);
+    attrs.push(`font-size="${fontSize}px"`);
+  } else {
+    attrs.push(`font-size="16px"`);
   }
 
+  // Font weight mapping for better cross-client support
   if (typo?.fontWeight) {
-    attrs.push(`font-weight="${typo.fontWeight}"`);
+    let weight = typo.fontWeight;
+    // Normalize font weights to email-safe values
+    if (weight < 300) weight = 300;
+    else if (weight < 400) weight = 300;
+    else if (weight < 500) weight = 400;
+    else if (weight < 600) weight = 500;
+    else if (weight < 700) weight = 600;
+    else if (weight < 800) weight = 700;
+    else weight = 700;
+
+    attrs.push(`font-weight="${weight}"`);
+  } else {
+    attrs.push(`font-weight="400"`);
   }
 
-  // Improved line height for better readability
+  // Precise line height for better typography
   if (typo?.lineHeight) {
     const lineHeight = parseFloat(typo.lineHeight);
-    attrs.push(`line-height="${Math.max(1.2, Math.min(1.8, lineHeight))}"`);
+    attrs.push(`line-height="${lineHeight}"`);
   } else {
-    attrs.push(`line-height="1.5"`);
+    attrs.push(`line-height="1.4"`);
   }
 
-  if (typo?.color) attrs.push(`color="${typo.color}"`);
-  if (typo?.letterSpacing) attrs.push(`letter-spacing="${typo.letterSpacing}px"`);
+  // Color with fallback
+  if (typo?.color) {
+    attrs.push(`color="${typo.color}"`);
+  } else {
+    attrs.push(`color="#333333"`);
+  }
+
+  // Letter spacing for precise typography
+  if (typo?.letterSpacing) {
+    attrs.push(`letter-spacing="${typo.letterSpacing}px"`);
+  }
 
   return attrs.join(" ");
 }
@@ -149,132 +215,188 @@ export function astToMjml(ast: EmailAst): string {
     return `<mj-section${bg}${full}${responsivePad || pad}>${cols}</mj-section>`;
   }).join("\n");
 
-  // Enhanced responsive CSS with mobile-first approach
+  // Enhanced responsive CSS with pixel-perfect typography
   const enhancedCss = `
     <mj-style>
+      /* Reset and base styles for consistent rendering */
+      * {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* Typography improvements */
+      .figmail-text {
+        font-feature-settings: "kern" 1, "liga" 1;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* Button enhancements */
+      .figmail-button {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        text-decoration: none;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        display: inline-block;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+        user-select: none;
+        transition: all 0.15s ease-in-out;
+      }
+
+      .figmail-button:hover {
+        opacity: 0.85;
+        transform: translateY(-1px);
+      }
+
+      /* Image optimizations */
+      .figmail-image {
+        -ms-interpolation-mode: bicubic;
+        border: 0;
+        outline: none;
+        text-decoration: none;
+        display: block;
+        max-width: 100%;
+        height: auto;
+      }
+
       /* Mobile-first responsive styles */
       @media only screen and (max-width: 480px) {
-        .enhanced-container {
-          border-radius: 4px !important;
-          margin: 0 10px !important;
-          overflow: hidden;
+        .figmail-container {
+          padding: 15px !important;
         }
 
-        .enhanced-image {
-          border-radius: 2px !important;
+        .figmail-text {
+          font-size: 16px !important;
+          line-height: 1.5 !important;
+        }
+
+        .figmail-heading {
+          font-size: 24px !important;
+          line-height: 1.3 !important;
+        }
+
+        .figmail-button {
+          width: 100% !important;
+          padding: 14px 20px !important;
+          font-size: 16px !important;
+          border-radius: 8px !important;
+        }
+
+        .figmail-image {
+          width: 100% !important;
+          height: auto !important;
+        }
+
+        /* Stack columns on mobile */
+        .mj-column {
           width: 100% !important;
           max-width: 100% !important;
         }
 
-        .enhanced-text {
-          font-size: 16px !important;
-          line-height: 1.4 !important;
-          text-shadow: none !important;
-        }
-
-        /* Button responsiveness */
-        .mj-button {
+        .mj-column-per-100,
+        .mj-column-per-50,
+        .mj-column-per-33,
+        .mj-column-per-25 {
           width: 100% !important;
-          padding: 12px 20px !important;
-          margin: 8px 0 !important;
-          font-size: 16px !important;
-          border-radius: 6px !important;
-        }
-
-        /* Section spacing for mobile */
-        .mj-section {
-          padding: 20px 15px !important;
-        }
-
-        /* Text alignment adjustments */
-        .mj-text {
-          text-align: left !important;
-          padding: 10px 0 !important;
-        }
-
-        /* Column stacking on mobile */
-        .mj-column {
-          width: 100% !important;
-          padding: 0 !important;
-        }
-
-        .mj-column + .mj-column {
-          margin-top: 20px !important;
+          max-width: 100% !important;
         }
       }
 
-      /* Tablet styles */
+      /* Tablet optimizations */
       @media only screen and (min-width: 481px) and (max-width: 768px) {
-        .enhanced-container {
-          border-radius: 6px;
-          margin: 0 15px;
-        }
-
-        .enhanced-text {
-          font-size: 18px;
+        .figmail-text {
+          font-size: 17px;
           line-height: 1.5;
         }
 
-        .mj-button {
-          padding: 14px 24px;
-          font-size: 16px;
+        .figmail-heading {
+          font-size: 28px;
+          line-height: 1.3;
+        }
+
+        .figmail-button {
+          padding: 12px 24px;
+          font-size: 15px;
         }
       }
 
-      /* Desktop styles */
+      /* Desktop refinements */
       @media only screen and (min-width: 769px) {
-        .enhanced-container {
-          border-radius: 8px;
-          overflow: hidden;
+        .figmail-text {
+          text-rendering: optimizeLegibility;
         }
 
-        .enhanced-image {
-          border-radius: 4px;
-        }
-
-        .enhanced-text {
-          text-shadow: none;
-        }
-
-        .mj-button {
-          padding: 12px 20px;
-          font-size: 14px;
-          transition: all 0.2s ease;
-        }
-
-        .mj-button:hover {
-          opacity: 0.9;
+        .figmail-button:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
       }
 
-      /* Email client specific fixes */
-      [owa] .mj-button {
-        border-radius: 4px !important;
+      /* Outlook-specific fixes */
+      <!--[if mso]>
+      table, td {
+        border-collapse: collapse;
+        mso-table-lspace: 0pt;
+        mso-table-rspace: 0pt;
       }
+      <![endif]-->
 
-      /* Outlook fixes */
-      @media screen and (-webkit-min-device-pixel-ratio: 0) {
-        .mj-text {
-          font-family: Arial, sans-serif !important;
+      /* High DPI display optimizations */
+      @media only screen and (-webkit-min-device-pixel-ratio: 1.25),
+             only screen and (min-resolution: 1.25dppx),
+             only screen and (min-resolution: 120dpi) {
+        .figmail-image {
+          image-rendering: -webkit-optimize-contrast;
+          image-rendering: crisp-edges;
         }
       }
 
-      /* Dark mode support */
+      /* Dark mode enhancements */
       @media (prefers-color-scheme: dark) {
-        .mj-text {
+        .figmail-text {
           color: #ffffff !important;
+        }
+        .figmail-container {
+          background-color: #1a1a1a !important;
+        }
+      }
+
+      /* Email client compatibility */
+      @media screen and (-webkit-min-device-pixel-ratio: 0) {
+        .figmail-text, .figmail-heading, .figmail-button {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+        }
+      }
+
+      /* Gmail fixes */
+      u + .body .figmail-text {
+        color: inherit !important;
+      }
+
+      /* Apple Mail fixes */
+      @media only screen and (max-device-width: 480px) {
+        .figmail-button {
+          min-height: 44px !important;
         }
       }
     </mj-style>
 
-    <!-- Responsive attributes for MJML -->
+    <!-- Enhanced MJML attributes for better defaults -->
     <mj-attributes>
-      <mj-all font-family="Arial, sans-serif" />
-      <mj-text font-size="16px" line-height="1.5" color="#333333" />
-      <mj-section padding="20px" />
-      <mj-column padding="0" />
-      <mj-button font-size="14px" padding="12px 24px" border-radius="6px" />
-      <mj-image padding="10px" />
+      <mj-all font-family='"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' />
+      <mj-text font-size="16px" line-height="1.4" color="#333333" css-class="figmail-text" />
+      <mj-section padding="0px" />
+      <mj-column padding="0px" />
+      <mj-button font-size="16px" padding="12px 24px" border-radius="8px" css-class="figmail-button" />
+      <mj-image css-class="figmail-image" />
     </mj-attributes>
   `;
 

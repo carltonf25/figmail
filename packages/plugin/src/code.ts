@@ -1,5 +1,6 @@
 import type { EmailAst, Section, Column, Block } from "@figmail/shared";
 import { templates, type EmailTemplate, type TemplateElement, type TemplateSection } from "./templates";
+import { modernTemplates, type ModernEmailTemplate } from "./templates-modern";
 
 figma.showUI(__html__, { width: 380, height: 580 });
 
@@ -302,6 +303,40 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
       // Check if this section contains column frames (multi-column layout)
       const columnFrames = sectionNode.children.filter((n): n is FrameNode => n.type === "FRAME" && n.name.startsWith("Email/Column"));
       const nonColumnChildren = sectionNode.children.filter((n) => !(n.type === "FRAME" && n.name.startsWith("Email/Column")));
+      
+      // Auto-detect potential columns: if we have multiple frames positioned side-by-side, treat them as columns
+      const potentialColumnFrames = sectionNode.children.filter((n): n is FrameNode => 
+        n.type === "FRAME" && 
+        !n.name.startsWith("Email/Column") &&
+        n.width > 100 && // Minimum width for a column
+        n.height > 50    // Minimum height for a column
+      ).sort((a, b) => a.x - b.x); // Sort by x position
+      
+      // Group frames that are horizontally aligned (similar y positions)
+      const autoColumnGroups: FrameNode[][] = [];
+      if (potentialColumnFrames.length > 1) {
+        for (const frame of potentialColumnFrames) {
+          let addedToGroup = false;
+          for (const group of autoColumnGroups) {
+            // Check if this frame is horizontally aligned with the group (within 30px Y tolerance)
+            if (group.length > 0 && Math.abs(frame.y - group[0].y) <= 30) {
+              group.push(frame);
+              addedToGroup = true;
+              break;
+            }
+          }
+          if (!addedToGroup) {
+            autoColumnGroups.push([frame]);
+          }
+        }
+      }
+      
+      // Find the largest group of horizontally aligned frames (potential column row)
+      const autoColumns = autoColumnGroups.length > 0 
+        ? autoColumnGroups.reduce((prev, current) => prev.length > current.length ? prev : current)
+        : [];
+      
+      console.log(`Section ${sectionNode.name}: Found ${columnFrames.length} explicit columns, ${autoColumns.length} auto-detected columns`);
 
       if (columnFrames.length > 0) {
         // Multi-column layout: process each column frame
@@ -342,8 +377,15 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
           // Process all children of this column as blocks (sort by Y position top-to-bottom)
           const sortedChildren = columnFrame.children.slice().sort((a, b) => a.y - b.y);
           for (const child of sortedChildren) {
-            // If this is a nested frame (but not a column frame), process its children
-            if (child.type === "FRAME" && !child.name.startsWith("Email/Column")) {
+            // Check if this is a special Email/ frame (Button, Image, etc.) that should be processed as a block
+            const isEmailSpecialFrame = child.type === "FRAME" && (
+              /Email\/Button/i.test(child.name) ||
+              /Email\/Image/i.test(child.name) ||
+              /Email\/Component/i.test(child.name)
+            );
+
+            // If this is a nested frame (but not a column frame or special Email frame), process its children
+            if (child.type === "FRAME" && !child.name.startsWith("Email/Column") && !isEmailSpecialFrame) {
               console.log(`Processing nested frame in column: ${child.name}, children: ${child.children.length}`);
               const nestedSortedChildren = child.children.slice().sort((a, b) => a.y - b.y);
               for (const nestedChild of nestedSortedChildren) {
@@ -359,6 +401,66 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
 
           section.columns.push(col);
         }
+      } else if (autoColumns.length > 1) {
+        // Auto-detected multi-column layout: treat horizontally aligned frames as columns
+        console.log(`Using auto-detected column layout with ${autoColumns.length} columns`);
+        
+        const totalSectionWidth = sectionNode.width;
+        for (const autoColumnFrame of autoColumns) {
+          // Calculate width percentage based on frame width relative to section width
+          const widthPercent = Math.round((autoColumnFrame.width / totalSectionWidth) * 100);
+          
+          const col: Column = {
+            id: autoColumnFrame.id,
+            name: `Auto Column (${autoColumnFrame.name})`,
+            type: "column",
+            widthPercent: widthPercent,
+            spacing: paddingFrom(autoColumnFrame),
+            blocks: []
+          };
+
+          // Process all children of this auto-detected column frame
+          const sortedChildren = autoColumnFrame.children.slice().sort((a, b) => a.y - b.y);
+          for (const child of sortedChildren) {
+            console.log(`Processing auto-column child: type=${child.type}, name=${(child as any).name || 'unnamed'}`);
+            const block = await toBlock(child as SceneNode, images);
+            if (block) {
+              col.blocks.push(block);
+            }
+          }
+
+          section.columns.push(col);
+        }
+        
+        // Process remaining children that are not part of auto-detected columns
+        const remainingChildren = sectionNode.children.filter((child) => 
+          !autoColumns.includes(child as FrameNode) && 
+          child.type !== "FRAME"
+        ).sort((a, b) => a.y - b.y);
+        
+        if (remainingChildren.length > 0) {
+          // Create an additional column for remaining elements
+          const remainingCol: Column = {
+            id: sectionNode.id + "-remaining",
+            name: "Remaining Elements",
+            type: "column",
+            widthPercent: undefined,
+            spacing: paddingFrom(sectionNode as any),
+            blocks: []
+          };
+          
+          for (const child of remainingChildren) {
+            console.log(`Processing remaining child: type=${child.type}, name=${(child as any).name || 'unnamed'}`);
+            const block = await toBlock(child as SceneNode, images);
+            if (block) {
+              remainingCol.blocks.push(block);
+            }
+          }
+          
+          if (remainingCol.blocks.length > 0) {
+            section.columns.push(remainingCol);
+          }
+        }
       } else {
         // Single column layout: process all children as blocks in one column
         const col: Column = {
@@ -373,8 +475,15 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
         // Process all children of this section as blocks (sort by Y position top-to-bottom)
         const sortedChildren = sectionNode.children.slice().sort((a, b) => a.y - b.y);
         for (const child of sortedChildren) {
-          // If this is a nested frame (but not a column frame), process its children
-          if (child.type === "FRAME" && !child.name.startsWith("Email/Column")) {
+          // Check if this is a special Email/ frame (Button, Image, etc.) that should be processed as a block
+          const isEmailSpecialFrame = child.type === "FRAME" && (
+            /Email\/Button/i.test(child.name) ||
+            /Email\/Image/i.test(child.name) ||
+            /Email\/Component/i.test(child.name)
+          );
+
+          // If this is a nested frame (but not a column frame or special Email frame), process its children
+          if (child.type === "FRAME" && !child.name.startsWith("Email/Column") && !isEmailSpecialFrame) {
             console.log(`Processing nested frame: ${child.name}, children: ${child.children.length}`);
             const nestedSortedChildren = child.children.slice().sort((a, b) => a.y - b.y);
             for (const nestedChild of nestedSortedChildren) {
@@ -400,7 +509,8 @@ async function buildAstAndImages(frame: FrameNode): Promise<{ ast: EmailAst, ima
 
 // Insert a premade email template into the current page
 async function insertTemplate(templateType: string): Promise<void> {
-  const template = templates[templateType];
+  // First check modern templates, then fall back to legacy templates
+  const template: EmailTemplate | ModernEmailTemplate = modernTemplates[templateType] || templates[templateType];
   if (!template) {
     throw new Error(`Template "${templateType}" not found`);
   }

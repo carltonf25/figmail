@@ -175,13 +175,10 @@ export default function App() {
               }}
             >
               <option value="">Choose a template...</option>
-              <option value="newsletter">📰 Newsletter Layout</option>
-              <option value="promotional">🎉 Promotional Email</option>
-              <option value="product-showcase">📦 Product Showcase</option>
-              <option value="event-invite">📅 Event Invitation</option>
-              <option value="welcome">👋 Welcome Email</option>
-              <option value="2-column-basic">📊 2-Column Basic</option>
-              <option value="3-column-features">📋 3-Column Features</option>
+              <option value="modern-newsletter">📧 Newsletter</option>
+              <option value="modern-promotional">🎯 Promotional</option>
+              <option value="modern-welcome">👋 Welcome Email</option>
+              <option value="modern-product-showcase">🛍️ Product Showcase</option>
             </select>
             <button
               onClick={handleInsertTemplate}

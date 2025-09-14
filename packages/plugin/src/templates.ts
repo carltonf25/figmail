@@ -938,13 +938,774 @@ export const welcomeTemplate: EmailTemplate = {
   ]
 };
 
-// Template registry
+// Modern Newsletter Template - Compatible Version
+export const modernNewsletterCompatTemplate: EmailTemplate = {
+  name: 'Modern Newsletter',
+  description: 'Clean, accessible newsletter with modern typography and optimal reading flow',
+  width: 600,
+  height: 900,
+  sections: [
+    // Header Section
+    {
+      type: 'section',
+      name: 'Email/Header Section',
+      x: 0,
+      y: 0,
+      width: 600,
+      height: 120,
+      backgroundColor: '#FFFFFF',
+      children: [
+        // Left column for logo
+        {
+          type: 'frame',
+          name: 'Email/Column/Left',
+          x: 0,
+          y: 0,
+          width: 300,
+          height: 72,
+          children: [
+            {
+              type: 'rectangle',
+              name: 'Email/Image/Company Logo',
+              x: 24,
+              y: 16,
+              width: 120,
+              height: 40,
+              backgroundColor: '#9DB2BF',
+              borderRadius: 4
+            }
+          ]
+        },
+        // Right column for date
+        {
+          type: 'frame',
+          name: 'Email/Column/Right',
+          x: 300,
+          y: 0,
+          width: 300,
+          height: 72,
+          children: [
+            {
+              type: 'text',
+              name: 'Email/Date Text',
+              x: 150,
+              y: 26,
+              width: 126,
+              height: 20,
+              content: 'December 2024',
+              fontSize: 14,
+              color: '#636E72',
+              textAlign: 'right'
+            }
+          ]
+        }
+      ]
+    },
+
+    // Hero Section
+    {
+      type: 'section',
+      name: 'Email/Hero Section',
+      x: 0,
+      y: 140,
+      width: 600,
+      height: 200,
+      backgroundColor: '#F1F3F4',
+      children: [
+        {
+          type: 'text',
+          name: 'Email/Main Headline',
+          x: 32,
+          y: 40,
+          width: 536,
+          height: 80,
+          content: 'The Future of Digital Experience Design',
+          fontSize: 28,
+          fontWeight: 'bold',
+          textAlign: 'left'
+        },
+        {
+          type: 'text',
+          name: 'Email/Hero Subtitle',
+          x: 32,
+          y: 130,
+          width: 536,
+          height: 50,
+          content: 'Discover the latest trends, tools, and techniques that are reshaping how we create meaningful digital experiences.',
+          fontSize: 18,
+          textAlign: 'left'
+        }
+      ]
+    },
+
+    // Content Section
+    {
+      type: 'section',
+      name: 'Email/Content Section',
+      x: 0,
+      y: 360,
+      width: 600,
+      height: 280,
+      backgroundColor: '#FFFFFF',
+      children: [
+        {
+          type: 'rectangle',
+          name: 'Email/Image/Article Image',
+          x: 32,
+          y: 32,
+          width: 536,
+          height: 160,
+          backgroundColor: '#4ECDC4',
+          borderRadius: 8
+        },
+        {
+          type: 'text',
+          name: 'Email/Article Title',
+          x: 32,
+          y: 212,
+          width: 536,
+          height: 32,
+          content: '5 Design Principles for Inclusive Digital Products',
+          fontSize: 20,
+          fontWeight: 'bold',
+          textAlign: 'left'
+        },
+        {
+          type: 'frame',
+          name: 'Email/Button/Read Article',
+          x: 32,
+          y: 252,
+          width: 140,
+          height: 44,
+          backgroundColor: '#FF6B6B',
+          borderRadius: 6,
+          children: [
+            {
+              type: 'text',
+              name: 'Read Article',
+              x: 0,
+              y: 0,
+              width: 140,
+              height: 44,
+              content: 'Read Article',
+              fontSize: 16,
+              fontWeight: 'bold',
+              color: '#FFFFFF',
+              textAlign: 'center',
+              hyperlink: 'https://example.com/article'
+            }
+          ]
+        }
+      ]
+    },
+
+    // Footer Section
+    {
+      type: 'section',
+      name: 'Email/Footer Section',
+      x: 0,
+      y: 660,
+      width: 600,
+      height: 100,
+      backgroundColor: '#2D3436',
+      children: [
+        {
+          type: 'text',
+          name: 'Email/Footer Text',
+          x: 32,
+          y: 24,
+          width: 536,
+          height: 20,
+          content: '© 2024 Your Company • 123 Design Street, Creative City',
+          fontSize: 14,
+          color: '#F8F9FA',
+          textAlign: 'center'
+        },
+        {
+          type: 'text',
+          name: 'Email/Unsubscribe Link',
+          x: 32,
+          y: 56,
+          width: 536,
+          height: 20,
+          content: 'Unsubscribe | Update Preferences | Privacy Policy',
+          fontSize: 14,
+          color: '#636E72',
+          textAlign: 'center',
+          hyperlink: 'https://example.com/unsubscribe'
+        }
+      ]
+    }
+  ]
+};
+
+// Modern Promotional Template - Compatible Version
+export const modernPromotionalCompatTemplate: EmailTemplate = {
+  name: 'Modern Promotional',
+  description: 'High-converting promotional email with clear value proposition and strong CTA',
+  width: 600,
+  height: 700,
+  sections: [
+    // Hero Section
+    {
+      type: 'section',
+      name: 'Email/Hero Section',
+      x: 0,
+      y: 0,
+      width: 600,
+      height: 320,
+      backgroundColor: '#A8E6CF',
+      children: [
+        {
+          type: 'text',
+          name: 'Email/Hero Badge',
+          x: 250,
+          y: 48,
+          width: 100,
+          height: 24,
+          content: 'EXCLUSIVE',
+          fontSize: 12,
+          fontWeight: 'bold',
+          color: '#FF6B6B',
+          textAlign: 'center'
+        },
+        {
+          type: 'text',
+          name: 'Email/Main Headline',
+          x: 32,
+          y: 88,
+          width: 536,
+          height: 80,
+          content: 'Upgrade Your Experience',
+          fontSize: 32,
+          fontWeight: 'bold',
+          color: '#2D3436',
+          textAlign: 'center'
+        },
+        {
+          type: 'text',
+          name: 'Email/Value Proposition',
+          x: 32,
+          y: 178,
+          width: 536,
+          height: 48,
+          content: 'Get 30% off premium features and unlock powerful tools that will transform how you work.',
+          fontSize: 18,
+          color: '#636E72',
+          textAlign: 'center'
+        },
+        {
+          type: 'frame',
+          name: 'Email/Button/Claim Discount',
+          x: 225,
+          y: 242,
+          width: 150,
+          height: 50,
+          backgroundColor: '#FF6B6B',
+          borderRadius: 8,
+          children: [
+            {
+              type: 'text',
+              name: 'Claim 30% Off',
+              x: 0,
+              y: 0,
+              width: 150,
+              height: 50,
+              content: 'Claim 30% Off',
+              fontSize: 16,
+              fontWeight: 'bold',
+              color: '#FFFFFF',
+              textAlign: 'center',
+              hyperlink: 'https://example.com/claim-discount'
+            }
+          ]
+        }
+      ]
+    },
+
+    // Features Section
+    {
+      type: 'section',
+      name: 'Email/Features Section',
+      x: 0,
+      y: 340,
+      width: 600,
+      height: 240,
+      backgroundColor: '#FFFFFF',
+      children: [
+        {
+          type: 'text',
+          name: 'Email/Features Title',
+          x: 32,
+          y: 40,
+          width: 536,
+          height: 32,
+          content: 'What You\'ll Get',
+          fontSize: 24,
+          fontWeight: 'bold',
+          color: '#2D3436',
+          textAlign: 'center'
+        },
+        {
+          type: 'text',
+          name: 'Email/Feature List',
+          x: 32,
+          y: 90,
+          width: 536,
+          height: 120,
+          content: '✓ Advanced analytics dashboard with real-time insights\n✓ Priority customer support with 2-hour response time\n✓ Unlimited projects and team collaboration tools',
+          fontSize: 16,
+          color: '#636E72',
+          textAlign: 'left'
+        }
+      ]
+    },
+
+    // Urgency Section
+    {
+      type: 'section',
+      name: 'Email/Urgency Section',
+      x: 0,
+      y: 600,
+      width: 600,
+      height: 100,
+      backgroundColor: '#FDCB6E',
+      children: [
+        {
+          type: 'text',
+          name: 'Email/Urgency Text',
+          x: 32,
+          y: 24,
+          width: 536,
+          height: 52,
+          content: '⏰ Offer expires in 48 hours\nDon\'t miss out on this limited-time opportunity',
+          fontSize: 16,
+          fontWeight: 'bold',
+          color: '#2D3436',
+          textAlign: 'center'
+        }
+      ]
+    }
+  ]
+};
+
+// Modern Welcome Template - Compatible Version
+export const modernWelcomeCompatTemplate: EmailTemplate = {
+  name: 'Modern Welcome',
+  description: 'Warm, accessible welcome email that guides new users to success',
+  width: 600,
+  height: 800,
+  sections: [
+    // Welcome Header
+    {
+      type: 'section',
+      name: 'Email/Welcome Header',
+      x: 0,
+      y: 0,
+      width: 600,
+      height: 220,
+      backgroundColor: '#9DB2BF',
+      children: [
+        {
+          type: 'text',
+          name: 'Email/Welcome Headline',
+          x: 32,
+          y: 48,
+          width: 536,
+          height: 80,
+          content: 'Welcome aboard! 👋',
+          fontSize: 28,
+          fontWeight: 'bold',
+          color: '#FFFFFF',
+          textAlign: 'center'
+        },
+        {
+          type: 'text',
+          name: 'Email/Welcome Message',
+          x: 32,
+          y: 138,
+          width: 536,
+          height: 48,
+          content: 'We\'re thrilled you\'ve joined our community. Let\'s help you get the most out of your new workspace.',
+          fontSize: 18,
+          color: '#F8F9FA',
+          textAlign: 'center'
+        }
+      ]
+    },
+
+    // Getting Started Steps
+    {
+      type: 'section',
+      name: 'Email/Getting Started Section',
+      x: 0,
+      y: 240,
+      width: 600,
+      height: 400,
+      backgroundColor: '#FFFFFF',
+      children: [
+        {
+          type: 'text',
+          name: 'Email/Steps Title',
+          x: 32,
+          y: 40,
+          width: 536,
+          height: 32,
+          content: 'Get Started in 3 Steps',
+          fontSize: 24,
+          fontWeight: 'bold',
+          color: '#2D3436',
+          textAlign: 'center'
+        },
+
+        // Step Icons
+        {
+          type: 'rectangle',
+          name: 'Email/Image/Step 1 Icon',
+          x: 80,
+          y: 100,
+          width: 48,
+          height: 48,
+          backgroundColor: '#4ECDC4',
+          borderRadius: 24
+        },
+        {
+          type: 'rectangle',
+          name: 'Email/Image/Step 2 Icon',
+          x: 276,
+          y: 100,
+          width: 48,
+          height: 48,
+          backgroundColor: '#FF6B6B',
+          borderRadius: 24
+        },
+        {
+          type: 'rectangle',
+          name: 'Email/Image/Step 3 Icon',
+          x: 472,
+          y: 100,
+          width: 48,
+          height: 48,
+          backgroundColor: '#FFD93D',
+          borderRadius: 24
+        },
+
+        // Step Text
+        {
+          type: 'text',
+          name: 'Email/Steps Text',
+          x: 32,
+          y: 170,
+          width: 536,
+          height: 100,
+          content: '1. Complete Your Profile\nAdd your details to personalize your experience\n\n2. Explore Key Features\nTake a quick tour of the powerful tools available\n\n3. Create Your First Project\nPut everything together and see the magic happen',
+          fontSize: 16,
+          color: '#636E72',
+          textAlign: 'left'
+        },
+
+        // CTA Button
+        {
+          type: 'frame',
+          name: 'Email/Button/Get Started',
+          x: 225,
+          y: 300,
+          width: 150,
+          height: 48,
+          backgroundColor: '#FF6B6B',
+          borderRadius: 8,
+          children: [
+            {
+              type: 'text',
+              name: 'Get Started Now',
+              x: 0,
+              y: 0,
+              width: 150,
+              height: 48,
+              content: 'Get Started Now',
+              fontSize: 16,
+              fontWeight: 'bold',
+              color: '#FFFFFF',
+              textAlign: 'center',
+              hyperlink: 'https://example.com/onboarding'
+            }
+          ]
+        }
+      ]
+    },
+
+    // Support Section
+    {
+      type: 'section',
+      name: 'Email/Support Section',
+      x: 0,
+      y: 660,
+      width: 600,
+      height: 140,
+      backgroundColor: '#F8F9FA',
+      children: [
+        {
+          type: 'text',
+          name: 'Email/Support Title',
+          x: 32,
+          y: 32,
+          width: 536,
+          height: 28,
+          content: 'Need Help?',
+          fontSize: 20,
+          fontWeight: 'bold',
+          color: '#2D3436',
+          textAlign: 'center'
+        },
+        {
+          type: 'text',
+          name: 'Email/Support Message',
+          x: 32,
+          y: 68,
+          width: 536,
+          height: 40,
+          content: 'Our team is here to help. Check out our help center or reach out directly.',
+          fontSize: 16,
+          color: '#636E72',
+          textAlign: 'center'
+        }
+      ]
+    }
+  ]
+};
+
+// Modern Product Showcase Template - Compatible Version
+export const modernProductShowcaseCompatTemplate: EmailTemplate = {
+  name: 'Modern Product Showcase',
+  description: 'Clean product grid with modern card design and accessibility features',
+  width: 600,
+  height: 600,
+  sections: [
+    // Header
+    {
+      type: 'section',
+      name: 'Email/Header Section',
+      x: 0,
+      y: 0,
+      width: 600,
+      height: 140,
+      backgroundColor: '#FFFFFF',
+      children: [
+        {
+          type: 'text',
+          name: 'Email/Main Headline',
+          x: 32,
+          y: 32,
+          width: 536,
+          height: 40,
+          content: 'New Arrivals',
+          fontSize: 28,
+          fontWeight: 'bold',
+          color: '#2D3436',
+          textAlign: 'center'
+        },
+        {
+          type: 'text',
+          name: 'Email/Subtitle',
+          x: 32,
+          y: 80,
+          width: 536,
+          height: 28,
+          content: 'Carefully curated products for creative professionals',
+          fontSize: 18,
+          color: '#636E72',
+          textAlign: 'center'
+        }
+      ]
+    },
+
+    // Products Section
+    {
+      type: 'section',
+      name: 'Email/Products Section',
+      x: 0,
+      y: 160,
+      width: 600,
+      height: 360,
+      backgroundColor: '#F1F3F4',
+      children: [
+        // Product 1
+        {
+          type: 'rectangle',
+          name: 'Email/Image/Product 1',
+          x: 40,
+          y: 40,
+          width: 120,
+          height: 120,
+          backgroundColor: '#4ECDC4',
+          borderRadius: 8
+        },
+        {
+          type: 'text',
+          name: 'Email/Product 1 Info',
+          x: 40,
+          y: 170,
+          width: 120,
+          height: 60,
+          content: 'Modern Desk Lamp\n$89.99',
+          fontSize: 14,
+          fontWeight: 'bold',
+          color: '#2D3436',
+          textAlign: 'left'
+        },
+
+        // Product 2
+        {
+          type: 'rectangle',
+          name: 'Email/Image/Product 2',
+          x: 200,
+          y: 40,
+          width: 120,
+          height: 120,
+          backgroundColor: '#A8E6CF',
+          borderRadius: 8
+        },
+        {
+          type: 'text',
+          name: 'Email/Product 2 Info',
+          x: 200,
+          y: 170,
+          width: 120,
+          height: 60,
+          content: 'Ergonomic Keyboard\n$149.99',
+          fontSize: 14,
+          fontWeight: 'bold',
+          color: '#2D3436',
+          textAlign: 'left'
+        },
+
+        // Product 3
+        {
+          type: 'rectangle',
+          name: 'Email/Image/Product 3',
+          x: 360,
+          y: 40,
+          width: 120,
+          height: 120,
+          backgroundColor: '#FFD93D',
+          borderRadius: 8
+        },
+        {
+          type: 'text',
+          name: 'Email/Product 3 Info',
+          x: 360,
+          y: 170,
+          width: 120,
+          height: 60,
+          content: 'Monitor Stand Pro\n$79.99',
+          fontSize: 14,
+          fontWeight: 'bold',
+          color: '#2D3436',
+          textAlign: 'left'
+        },
+
+        // Product 4
+        {
+          type: 'rectangle',
+          name: 'Email/Image/Product 4',
+          x: 120,
+          y: 250,
+          width: 120,
+          height: 80,
+          backgroundColor: '#9DB2BF',
+          borderRadius: 8
+        },
+        {
+          type: 'text',
+          name: 'Email/Product 4 Info',
+          x: 120,
+          y: 340,
+          width: 120,
+          height: 20,
+          content: 'Precision Mouse - $59.99',
+          fontSize: 12,
+          color: '#2D3436',
+          textAlign: 'left'
+        },
+
+        // Product 5
+        {
+          type: 'rectangle',
+          name: 'Email/Image/Product 5',
+          x: 280,
+          y: 250,
+          width: 120,
+          height: 80,
+          backgroundColor: '#FF6B6B',
+          borderRadius: 8
+        },
+        {
+          type: 'text',
+          name: 'Email/Product 5 Info',
+          x: 280,
+          y: 340,
+          width: 120,
+          height: 20,
+          content: 'Cable Organizer - $24.99',
+          fontSize: 12,
+          color: '#2D3436',
+          textAlign: 'left'
+        }
+      ]
+    },
+
+    // CTA Section
+    {
+      type: 'section',
+      name: 'Email/CTA Section',
+      x: 0,
+      y: 540,
+      width: 600,
+      height: 80,
+      backgroundColor: '#FFFFFF',
+      children: [
+        {
+          type: 'frame',
+          name: 'Email/Button/Shop All',
+          x: 225,
+          y: 16,
+          width: 150,
+          height: 48,
+          backgroundColor: '#2D3436',
+          borderRadius: 8,
+          children: [
+            {
+              type: 'text',
+              name: 'Shop All Products',
+              x: 0,
+              y: 0,
+              width: 150,
+              height: 48,
+              content: 'Shop All Products',
+              fontSize: 16,
+              fontWeight: 'bold',
+              color: '#FFFFFF',
+              textAlign: 'center',
+              hyperlink: 'https://example.com/products'
+            }
+          ]
+        }
+      ]
+    }
+  ]
+};
+
+// Template registry - modern templates only (compatible versions)
 export const templates: Record<string, EmailTemplate> = {
-  'newsletter': newsletterTemplate,
-  'promotional': promotionalTemplate,
-  'product-showcase': productShowcaseTemplate,
-  'event-invite': eventInviteTemplate,
-  'welcome': welcomeTemplate,
-  '2-column-basic': twoColumnBasicTemplate,
-  '3-column-features': threeColumnFeaturesTemplate,
+  // Modern template names
+  'modern-newsletter': modernNewsletterCompatTemplate,
+  'modern-promotional': modernPromotionalCompatTemplate,
+  'modern-welcome': modernWelcomeCompatTemplate,
+  'modern-product-showcase': modernProductShowcaseCompatTemplate,
+  
+  // Legacy template names for backward compatibility
+  'newsletter': modernNewsletterCompatTemplate,
+  'promotional': modernPromotionalCompatTemplate,
+  'welcome': modernWelcomeCompatTemplate,
+  'product-showcase': modernProductShowcaseCompatTemplate,
 };
